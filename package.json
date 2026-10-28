@@ -1,0 +1,75 @@
+{
+  "name": "krylt",
+  "version": "3.0.0-dev.8",
+  "description": "KRYLT \u2014 modern browsing by Cyclonix Designs",
+  "main": "src/main.js",
+  "author": "Cyclonix Designs",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:linux": "electron-builder --linux dir",
+    "dist:win:linux": "node scripts/build-windows-linux.cjs",
+    "release:win": "node scripts/release-windows.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.0.12",
+    "pe-library": "2.0.1",
+    "resedit": "3.1.0"
+  },
+  "build": {
+    "appId": "com.tempest.ultra",
+    "productName": "KRYLT",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json",
+      "!assets/landing.png"
+    ],
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false,
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KRYLT",
+      "uninstallDisplayName": "KRYLT",
+      "artifactName": "KRYLT-${version}-Setup-${arch}.${ext}",
+      "include": "build/installer.nsh",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerSidebar": "build/sidebar.bmp",
+      "uninstallerSidebar": "build/sidebar.bmp",
+      "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "target": "dir",
+      "category": "Network"
+    },
+    "afterPack": "scripts/brand-windows.cjs",
+    "extraFiles": [
+      {
+        "from": "themes",
+        "to": "themes",
+        "filter": [
+          "KRYLT-Ocean.json"
+        ]
+      }
+    ],
+    "copyright": "Copyright \u00a9 2026 Cyclonix Designs"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11",
+    "google-auth-library": "^10.3.0",
+    "js-yaml": "4.3.2",
+    "parse5": "^7.3.0"
+  }
+}

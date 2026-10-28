@@ -1,0 +1,20 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {configureIdentity}=require('../src/identity');
+const {Vault}=require('../src/vault');
+test('the KRYLT identity reuses existing browser metadata and encrypted vault without copying or replacing them',async t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'krylt-identity-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const legacy=path.join(root,'tempest-ultra');fs.mkdirSync(legacy);
+ const metadata={bookmarks:[{title:'My existing bookmark',url:'https://example.com/'}],settings:{zoom:125}};
+ fs.writeFileSync(path.join(legacy,'tempest.json'),JSON.stringify(metadata));
+ const vaultPath=path.join(legacy,'password-vault.json'),oldVault=new Vault(vaultPath);
+ await oldVault.create('legacy profile test passphrase');oldVault.upsert({origin:'https://example.com',username:'existing-user',password:'existing-test-password'});const bytes=fs.readFileSync(vaultPath);oldVault.lock();
+ const paths={appData:root,userData:path.join(root,'some-new-name')};let name='tempest-ultra';
+ const app={getPath:key=>paths[key],setPath:(key,value)=>{paths[key]=value;},setName:value=>{name=value;}};
+ configureIdentity(app);
+ assert.equal(name,'KRYLT');assert.equal(paths.userData,legacy);
+ assert.equal(paths.sessionData,legacy);
+ assert.deepEqual(JSON.parse(fs.readFileSync(path.join(paths.userData,'tempest.json'))),metadata);
+ assert.deepEqual(fs.readFileSync(vaultPath),bytes);
+ const current=new Vault(path.join(paths.userData,'password-vault.json'));await current.unlock('legacy profile test passphrase');assert.equal(current.list()[0].username,'existing-user');current.lock();
+});

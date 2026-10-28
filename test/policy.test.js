@@ -1,0 +1,7 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {resolveInput,webURL,shouldBlock}=require('../src/policy');
+test('navigation rejects privileged and script schemes',()=>{for(const s of ['javascript:alert(1)','file:///etc/passwd','data:text/html,hi','chrome://settings','https://user:pass@example.com'])assert.throws(()=>resolveInput(s));});
+test('navigation canonicalizes sites and searches',()=>{assert.equal(resolveInput('example.com'),'https://example.com/');assert.equal(resolveInput('localhost:8080'),'http://localhost:8080/');assert.equal(resolveInput('hello world'),'https://www.google.com/search?q=hello%20world');assert.equal(webURL('file:///tmp/a'),false);});
+test('filter respects hostname boundaries and disabling',()=>{assert.equal(shouldBlock('https://ads.doubleclick.net/a'),true);assert.equal(shouldBlock('https://notdoubleclick.net/a'),false);assert.equal(shouldBlock('https://doubleclick.net.evil.example'),false);assert.equal(shouldBlock('https://doubleclick.net',false),false);});
+
+const {validateTheme}=require('../src/policy');
+test('theme packs reject CSS injection and incomplete colors',()=>{assert.throws(()=>validateTheme({colors:{bg:'url(https://example.com)'}}));const colors=Object.fromEntries(['bg','surface','raised','text','muted','line','blue'].map(k=>[k,'#123456']));assert.equal(validateTheme({name:'Ocean',colors}).colors.bg,'#123456');});

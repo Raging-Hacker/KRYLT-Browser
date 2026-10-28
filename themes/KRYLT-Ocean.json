@@ -1,0 +1,12 @@
+{
+  "name": "KRYLT Ocean",
+  "colors": {
+    "bg": "#071521",
+    "surface": "#0c2336",
+    "raised": "#143650",
+    "text": "#f1f9ff",
+    "muted": "#9abbd0",
+    "line": "#24485e",
+    "blue": "#087fbd"
+  }
+}

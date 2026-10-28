@@ -1,0 +1,33 @@
+'use strict';
+const crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
+const MAX_BYTES=5*1024*1024,MAX_ENTRIES=1000;
+const b64=b=>Buffer.from(b).toString('base64');
+function decode(s,n){if(typeof s!=='string'||s.length>MAX_BYTES||! /^[A-Za-z0-9+/]*={0,2}$/.test(s))throw Error('Invalid encrypted vault');const b=Buffer.from(s,'base64');if(b64(b)!==s||(n!==undefined&&b.length!==n))throw Error('Invalid encrypted vault');return b;}
+function parseEnvelope(raw){if(!Buffer.isBuffer(raw))raw=Buffer.from(raw);if(raw.length>MAX_BYTES)throw Error('Vault backup exceeds 5 MB');let e;try{e=JSON.parse(raw.toString('utf8'));}catch{throw Error('Invalid encrypted vault');}if(!e||e.format!=='tempest-vault'||e.version!==1||e.kdf!=='scrypt'||e.N!==131072||e.r!==8||e.p!==1)throw Error('Unsupported vault format');decode(e.salt,16);decode(e.iv,12);decode(e.tag,16);decode(e.data);return e;}
+function aad(e){return Buffer.from(JSON.stringify({format:e.format,version:e.version,kdf:e.kdf,N:e.N,r:e.r,p:e.p,salt:e.salt}));}
+function passValid(pass,creating=false){if(typeof pass!=='string'||Buffer.byteLength(pass)>1024||pass.length<(creating?12:1))throw Error(creating?'Use a vault passphrase of at least 12 characters':'Enter your vault passphrase');}
+function derive(pass,salt){passValid(pass);return new Promise((resolve,reject)=>crypto.scrypt(pass,salt,32,{N:131072,r:8,p:1,maxmem:256*1024*1024},(e,k)=>e?reject(Error('Unable to derive vault key')):resolve(k)));}
+function originOf(input){if(typeof input!=='string'||input.length>8192)throw Error('Enter an HTTPS website');let u;try{u=new URL(input);}catch{throw Error('Enter a full HTTPS website address');}if(u.protocol!=='https:'||u.username||u.password)throw Error('Password records require an HTTPS website without URL credentials');return u.origin;}
+function validEntry(e){if(!e||typeof e.username!=='string'||e.username.length>320||typeof e.password!=='string'||!e.password||e.password.length>4096)throw Error('Invalid username or password');return {id:typeof e.id==='string'&&/^[0-9a-f-]{36}$/i.test(e.id)?e.id:crypto.randomUUID(),origin:originOf(e.origin),username:e.username,password:e.password,updated:typeof e.updated==='number'?e.updated:Date.now()};}
+function decrypt(e,key){try{const d=crypto.createDecipheriv('aes-256-gcm',key,decode(e.iv,12));d.setAAD(aad(e));d.setAuthTag(decode(e.tag,16));const bytes=Buffer.concat([d.update(decode(e.data)),d.final()]);let p;try{p=JSON.parse(bytes.toString('utf8'));}finally{bytes.fill(0);}if(!p||p.version!==1||!Array.isArray(p.entries)||p.entries.length>MAX_ENTRIES)throw Error();return p.entries.map(validEntry);}catch{throw Error('Incorrect passphrase or damaged vault');}}
+function seal(entries,key,salt){const e={format:'tempest-vault',version:1,kdf:'scrypt',N:131072,r:8,p:1,salt:b64(salt),iv:b64(crypto.randomBytes(12))};const c=crypto.createCipheriv('aes-256-gcm',key,decode(e.iv));c.setAAD(aad(e));const bytes=Buffer.from(JSON.stringify({version:1,entries}));try{e.data=b64(Buffer.concat([c.update(bytes),c.final()]));e.tag=b64(c.getAuthTag());return Buffer.from(JSON.stringify(e));}finally{bytes.fill(0);}}
+class Vault{
+ constructor(file,onChange=()=>{},timeout=300000){this.file=file;this.changed=onChange;this.timeout=timeout;this.entries=[];this.key=null;this.salt=null;this.busy=false;this.timer=null;this.epoch=0;}
+ status(){return {exists:fs.existsSync(this.file),unlocked:!!this.key,count:this.key?this.entries.length:null,busy:this.busy};}
+ read(){const stat=fs.statSync(this.file);if(!stat.isFile()||stat.size>MAX_BYTES)throw Error('Invalid vault file');return fs.readFileSync(this.file);}
+ write(bytes){const tmp=this.file+'.tmp';try{fs.writeFileSync(tmp,bytes,{mode:0o600});fs.renameSync(tmp,this.file);}catch{try{fs.unlinkSync(tmp);}catch{}throw Error('Could not save the encrypted vault');}}
+ touch(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.lock(),this.timeout);this.timer.unref?.();}
+ lock(){this.epoch++;clearTimeout(this.timer);this.key?.fill(0);this.salt?.fill(0);this.key=null;this.salt=null;this.entries=[];this.changed();}
+ require(){if(!this.key)throw Error('Unlock your password vault first');this.touch();}
+ async exclusive(fn){if(this.busy)throw Error('A vault operation is already in progress');this.busy=true;this.changed();try{return await fn();}finally{this.busy=false;this.changed();}}
+ async create(pass){return this.exclusive(async()=>{if(fs.existsSync(this.file))throw Error('A vault already exists');passValid(pass,true);const epoch=this.epoch,salt=crypto.randomBytes(16),key=await derive(pass,salt);try{if(epoch!==this.epoch)throw Error('Vault operation canceled by lock');this.write(seal([],key,salt));this.key=key;this.salt=salt;this.entries=[];this.touch();}catch(e){key.fill(0);throw e;}});}
+ async unlock(pass){return this.exclusive(async()=>{const epoch=this.epoch,e=parseEnvelope(this.read()),key=await derive(pass,decode(e.salt));try{const entries=decrypt(e,key);if(epoch!==this.epoch)throw Error('Vault operation canceled by lock');this.lock();this.key=key;this.salt=decode(e.salt);this.entries=entries;this.touch();}catch(error){key.fill(0);throw error;}});}
+ list(){this.require();return this.entries.map(({password,...e})=>e);}
+ get(id){this.require();const e=this.entries.find(x=>x.id===id);if(!e)throw Error('Password record not found');return {...e};}
+ upsert(input){this.require();if(this.busy)throw Error('A vault operation is in progress');const e=validEntry(input);const i=this.entries.findIndex(x=>x.origin===e.origin&&x.username===e.username);if(i<0&&this.entries.length>=MAX_ENTRIES)throw Error('Vault limit reached');const next=this.entries.map(x=>({...x}));if(i>=0)next[i]={...e,id:next[i].id,updated:Date.now()};else next.push(e);const bytes=seal(next,this.key,this.salt);if(bytes.length>MAX_BYTES)throw Error('Vault size limit reached');this.write(bytes);this.entries=next;this.changed();}
+ remove(id){this.require();if(this.busy)throw Error('A vault operation is in progress');const next=this.entries.filter(x=>x.id!==id);this.write(seal(next,this.key,this.salt));this.entries=next;this.changed();}
+ encrypted(){const raw=this.read();parseEnvelope(raw);return raw;}
+ async restore(raw,pass,confirm=async()=>true){return this.exclusive(async()=>{const e=parseEnvelope(raw),key=await derive(pass,decode(e.salt));try{decrypt(e,key);if(!await confirm())return false;this.write(Buffer.from(JSON.stringify(e)));this.lock();return true;}finally{key.fill(0);}});}
+ generate(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_';return Array.from({length:24},()=>chars[crypto.randomInt(chars.length)]).join('');}
+}
+module.exports={Vault,parseEnvelope,originOf,MAX_BYTES};

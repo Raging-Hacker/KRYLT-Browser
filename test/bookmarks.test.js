@@ -1,0 +1,13 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {importBookmarks,exportBookmarks,MAX_BYTES}=require('../src/bookmarks');
+test('browser HTML handles nested folders, entities and duplicate URLs',()=>{const html='<DL><DT><H3>Work</H3><DL><DT><A HREF="https://example.com?a=1&amp;b=2"><b>A &amp; B</b></A><DT><A HREF="javascript:alert(1)">Bad</A></DL><DT><A HREF="https://example.com/?a=1&amp;b=2">Duplicate</A></DL>';const r=importBookmarks(html,'html');assert.deepEqual(r.summary,{imported:1,duplicates:1,invalid:1,overLimit:0,total:1});assert.equal(r.bookmarks[0].title,'A & B');});
+test('HTML and JSON round trips escape markup and preserve Unicode',()=>{const b=[{title:'Storm <test> " & café 🦅',url:'https://example.com/?x=1&y=2'}];for(const f of ['html','json'])assert.deepEqual(importBookmarks(exportBookmarks(b,f),f).bookmarks,b);assert(exportBookmarks(b,'html').includes('&lt;test&gt;'));});
+test('KRYLT exports retain support for legacy Tempest bookmark backups',()=>{
+ const bookmarks=[{title:'Keep my bookmark',url:'https://example.com/'}];
+ const old=JSON.stringify({format:'tempest-bookmarks',version:1,bookmarks});
+ assert.deepEqual(importBookmarks(old,'json').bookmarks,bookmarks);
+ const current=exportBookmarks(bookmarks,'json');assert.equal(JSON.parse(current).format,'krylt-bookmarks');
+ assert.deepEqual(importBookmarks(current,'json').bookmarks,bookmarks);
+ assert.match(exportBookmarks(bookmarks,'html'),/<TITLE>KRYLT Bookmarks<\/TITLE>/);
+});
+test('imports preserve existing names and enforce capacity',()=>{const existing=Array.from({length:499},(_,i)=>({title:'Existing '+i,url:'https://example.com/'+i}));const input={format:'tempest-bookmarks',version:1,bookmarks:[{title:'Renamed',url:existing[0].url},{title:'New',url:'https://new.example/'},{title:'Extra',url:'https://extra.example/'}]};const r=importBookmarks(JSON.stringify(input),'json',existing);assert.equal(r.bookmarks[0].title,'Existing 0');assert.equal(r.summary.imported,1);assert.equal(r.summary.duplicates,1);assert.equal(r.summary.overLimit,1);assert.equal(existing.length,499);});
+test('malformed, oversized and unsafe input does not mutate existing bookmarks',()=>{const b=[{title:'Keep',url:'https://keep.example/'}];assert.throws(()=>importBookmarks('{','json',b));assert.throws(()=>importBookmarks('{}','json',b));assert.throws(()=>importBookmarks('x'.repeat(MAX_BYTES+1),'html',b));assert.throws(()=>importBookmarks('<p>No bookmarks</p>','html',b));const r=importBookmarks('<a href="file:///etc/passwd">File</a><a href="https://user:pass@example.com">Credentials</a>','html',b);assert.equal(r.summary.invalid,2);assert.deepEqual(r.bookmarks,b);});
