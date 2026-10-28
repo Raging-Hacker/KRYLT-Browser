@@ -18,7 +18,7 @@ jobs:
       - run: npm run check
       - run: npm test
       - name: Electron integration flows
-        run: xvfb-run -a npm run test:integration
+        run: xvfb-run -a -s "-screen 0 1600x1100x24" npm run test:integration
         env:
           KRYLT_TEST_UNSANDBOXED: '1'
       - uses: actions/upload-artifact@v4

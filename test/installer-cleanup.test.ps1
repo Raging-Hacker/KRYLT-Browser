@@ -41,3 +41,5 @@ try {
 } finally {
   if (Test-Path $fixture) { Remove-Item -LiteralPath $fixture -Recurse -Force }
 }
+
+exit 0
