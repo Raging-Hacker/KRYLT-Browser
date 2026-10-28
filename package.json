@@ -67,7 +67,8 @@
         ]
       }
     ],
-    "copyright": "Copyright © 2026 Cyclonix Designs"
+    "copyright": "Copyright © 2026 Cyclonix Designs",
+    "artifactBuildStarted": "scripts/clean-build-output.cjs"
   },
   "dependencies": {
     "electron-updater": "6.8.11",

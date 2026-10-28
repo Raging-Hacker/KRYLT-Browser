@@ -16,7 +16,6 @@
 !macro customHeader
 !ifndef BUILD_UNINSTALLER
 Section "-Clean previous KRYLT runtime" KRYLT_CLEANUP_SECTION
-  !insertmacro CHECK_APP_RUNNING
   InitPluginsDir
   File /oname=$PLUGINSDIR\krylt-clean-install.ps1 "${BUILD_RESOURCES_DIR}\clean-install.ps1"
   nsExec::ExecToStack '"$WINDIR\SysNative\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\krylt-clean-install.ps1" -InstallDirectory "$INSTDIR"'

@@ -3,7 +3,7 @@
 28 October 2026
 
 - Build dependencies upgraded to electron-builder 26.18.0 after checking published security advisories (npm audit reports zero vulnerabilities); runtime updater remains 6.8.11 with builder-util-runtime 9.7.0.
-- 48 Node tests pass, including history visit deletion, private-session exclusion,
+- 49 Node tests pass, including history visit deletion, private-session exclusion,
   responsive overflow selection, safe favicon transport, external Windows auth
   routing, vault restore cancellation and malformed Unicode OAuth state handling.
 - Electron 45.1.0 integration checks pass for horizontal tabs/More selection, tab
