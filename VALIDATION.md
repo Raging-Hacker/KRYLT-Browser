@@ -1,3 +1,31 @@
+# KRYLT dev.9 validation
+
+28 October 2026
+
+- Build dependencies upgraded to electron-builder 26.18.0 after checking published security advisories (npm audit reports zero vulnerabilities); runtime updater remains 6.8.11 with builder-util-runtime 9.7.0.
+- 49 Node tests pass, including history visit deletion, private-session exclusion,
+  responsive overflow selection, safe favicon transport, external Windows auth
+  routing, vault restore cancellation and malformed Unicode OAuth state handling.
+- Electron 45.1.0 integration checks pass for horizontal tabs/More selection, tab
+  search, new service logos, real native outside-click dismissal with unchanged
+  page bounds, individual history deletion, password generation without submit,
+  manual save and real isolated-world HTTPS capture/fill, reveal/lock clearing,
+  process metrics, PNG export, and session persistence across window closure.
+- Runtime fixtures use a temporary profile, a pinned local test certificate,
+  substituted native dialogs, a substituted single-instance lock and a root-only
+  sandbox override. None of these substitutions enters the production package.
+- Unsigned Windows x64 NSIS installer cross-compiles with the pinned builder.
+  Setup and uninstaller embed the new cleanup scripts. Windows cleanup regression
+  tests are committed for CI, including unrelated-folder rejection, stale-file
+  removal, directory-junction boundaries and legacy vault-profile removal.
+- Production source keeps sandbox/context isolation and remote Node/preload
+  restrictions. Private tabs do not enter saved sessions or closed-tab history.
+- Real Windows install/upgrade/uninstall, UAC/default-association behaviour and
+  live service/OAuth accounts still require Windows testing. No certificate was
+  supplied; this preview remains unsigned and stable auto-updates remain disabled.
+
+Historical validation records below describe earlier builds.
+
 # KRYLT dev.8 validation
 
 28 October 2026
@@ -76,3 +104,4 @@ The earlier dev.5 validation record follows for unchanged features.
 - No live Google OAuth/Drive integration or independent security audit has been completed. No production credential-safety claim is made.
 
 - HTTPS fixture runtime checks passed for explicit password fill and capture through the actual isolated-world API; a different HTTPS origin was rejected. No real user credentials were used.
+

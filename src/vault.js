@@ -27,7 +27,8 @@ class Vault{
  upsert(input){this.require();if(this.busy)throw Error('A vault operation is in progress');const e=validEntry(input);const i=this.entries.findIndex(x=>x.origin===e.origin&&x.username===e.username);if(i<0&&this.entries.length>=MAX_ENTRIES)throw Error('Vault limit reached');const next=this.entries.map(x=>({...x}));if(i>=0)next[i]={...e,id:next[i].id,updated:Date.now()};else next.push(e);const bytes=seal(next,this.key,this.salt);if(bytes.length>MAX_BYTES)throw Error('Vault size limit reached');this.write(bytes);this.entries=next;this.changed();}
  remove(id){this.require();if(this.busy)throw Error('A vault operation is in progress');const next=this.entries.filter(x=>x.id!==id);this.write(seal(next,this.key,this.salt));this.entries=next;this.changed();}
  encrypted(){const raw=this.read();parseEnvelope(raw);return raw;}
- async restore(raw,pass,confirm=async()=>true){return this.exclusive(async()=>{const e=parseEnvelope(raw),key=await derive(pass,decode(e.salt));try{decrypt(e,key);if(!await confirm())return false;this.write(Buffer.from(JSON.stringify(e)));this.lock();return true;}finally{key.fill(0);}});}
+ async restore(raw,pass,confirm=async()=>true){return this.exclusive(async()=>{const epoch=this.epoch,e=parseEnvelope(raw),key=await derive(pass,decode(e.salt));try{decrypt(e,key);if(epoch!==this.epoch)throw Error('Vault restore canceled by lock');if(!await confirm())return false;if(epoch!==this.epoch)throw Error('Vault restore canceled by lock');this.write(Buffer.from(JSON.stringify(e)));this.lock();return true;}finally{key.fill(0);}});}
  generate(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_';return Array.from({length:24},()=>chars[crypto.randomInt(chars.length)]).join('');}
 }
 module.exports={Vault,parseEnvelope,originOf,MAX_BYTES};
+

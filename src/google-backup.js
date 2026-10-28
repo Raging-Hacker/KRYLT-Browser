@@ -3,7 +3,7 @@ const fs=require('node:fs'),crypto=require('node:crypto'),http=require('node:htt
 const {OAuth2Client}=require('google-auth-library');const {parseEnvelope,MAX_BYTES}=require('./vault');
 const SCOPE='https://www.googleapis.com/auth/drive.appdata';
 function configOf(raw){let c;try{c=JSON.parse(raw);}catch{throw Error('Invalid Google OAuth configuration');}const i=c?.installed;if(!i||typeof i.client_id!=='string'||! /^[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/.test(i.client_id))throw Error('Use a Google Desktop OAuth client JSON file');if(i.client_secret!==undefined&&(typeof i.client_secret!=='string'||i.client_secret.length>512))throw Error('Invalid OAuth client configuration');return {clientId:i.client_id,clientSecret:i.client_secret||undefined};}
-function equal(a,b){if(typeof a!=='string'||a.length!==b.length)return false;return crypto.timingSafeEqual(Buffer.from(a),Buffer.from(b));}
+function equal(a,b){if(typeof a!=='string'||typeof b!=='string')return false;const left=Buffer.from(a),right=Buffer.from(b);if(left.length!==right.length)return false;return crypto.timingSafeEqual(left,right);}
 async function boundedResponse(r){if(!r.ok)throw Error('Google request failed ('+r.status+'). Reconnect your account if needed.');if(Number(r.headers.get('content-length'))>MAX_BYTES)throw Error('Google response exceeds size limit');let size=0;const chunks=[];try{for await(const chunk of r.body){size+=chunk.length;if(size>MAX_BYTES)throw Error('Google response exceeds size limit');chunks.push(chunk);}}catch(e){await r.body?.cancel().catch(()=>{});throw e;}return Buffer.concat(chunks);}
 class GoogleBackup{
  constructor(file,onChange=()=>{}){this.file=file;this.changed=onChange;this.client=null;this.account=null;this.busy=false;this.backups=[];this.cancel=null;this.generation=0;}
@@ -24,3 +24,4 @@ class GoogleBackup{
  async download(id){if(!this.backups.some(b=>b.id===id))throw Error('Refresh backups and select one from your account');const raw=await this.request('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media');parseEnvelope(raw);return raw;}
 }
 module.exports={GoogleBackup,configOf};
+

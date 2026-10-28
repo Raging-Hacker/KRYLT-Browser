@@ -1,13 +1,19 @@
-# KRYLT 3.0.0-dev.8
+# KRYLT 3.0.0-dev.9
 
-KRYLT is the new name of the browser by Cyclonix Designs. The original eagle/shield logo remains.
+Published by Cyclonix Designs.
 
-- New KRYLT app, executable, installer, shortcuts, default-browser display name and About/settings branding.
-- Updated KRYLT wallpaper, installer sidebar, bookmark exports and theme pack.
-- Existing bookmarks, encrypted vault and browser profile remain compatible.
-- Assisted setup supports a custom installation folder and an optional Windows default-browser Settings prompt.
-- Monthly update code is included for future configured signed releases.
+- Tabs above the address bar, responsive More overflow, tab search and reopen closed tab.
+- Discord, Twitch, TikTok and YouTube Studio floating tools, with recognizable service marks.
+- Click the website beneath a floating app to dismiss its panel.
+- Search history, delete individual visits and delete selected visits.
+- Fix Settings default-browser action and password-generation form submission.
+- Explicit password reveal with clearing; cancel vault restores on lock.
+- Google sign-in launches an external browser on Windows even when KRYLT is default.
+- Normal-session restore, opt-in inactive-tab sleeping, live performance monitor and PNG screenshots.
+- Recognized-installation cleanup before setup; explicit uninstall removes app profiles/vaults/caches.
+- Update the build toolchain to patched dependencies and add an audit gate.
+- Repair publishing helper and add automated tests and build checks.
 
-**Unsigned development preview:** automatic updates are disabled pending a trusted signing identity. Install this preview manually. Close the earlier browser before setup. Windows installation/upgrade and live-service sign-in still need testing on Windows.
-
-The release downloads include the installer, matching blockmap and SHA256SUMS.txt. This preview does not activate the stable update feed.
+Unsigned development preview. Updates retain browser data; explicit uninstall
+permanently removes it. Export an encrypted vault backup before uninstalling.
+Trusted signing and live-service/Windows lifecycle validation remain outstanding.

@@ -98,3 +98,5 @@ test('release verification detects modified installers and missing blockmaps',t=
  fs.writeFileSync(path.join(f.dir,name),'modified installer');assert.throws(()=>verifyAssets(f.dir,'3.0.0'));
  fs.writeFileSync(path.join(f.dir,name),bytes);fs.rmSync(path.join(f.dir,name+'.blockmap'));assert.throws(()=>verifyAssets(f.dir,'3.0.0'));
 });
+
+test('preview and signed-release options validate against the pinned builder schema',async()=>{const {validateConfiguration}=require('app-builder-lib/out/util/config/config');const base=require('../package.json').build;const logger={isEnabled:false};await validateConfiguration(base,logger);const release=releaseConfig({KRYLT_UPDATE_REPOSITORY:'Raging-Hacker/KRYLT-Browser',KRYLT_PUBLISHER_DN:source.publisherName[0],KRYLT_CERTIFICATE_SHA1:'A'.repeat(40)},'3.0.0');await validateConfiguration({...base,...release.config,win:{...base.win,...release.config.win}},logger);});

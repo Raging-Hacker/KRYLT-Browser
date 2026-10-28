@@ -15,9 +15,5 @@ module.exports=async(context)=>{
   v.setStringValues({lang:1033,codepage:1200},{CompanyName:'Cyclonix Designs',FileDescription:'KRYLT Browser',ProductName:'KRYLT',InternalName:'KRYLT',OriginalFilename:'KRYLT.exe',LegalCopyright:'Copyright © 2026 Cyclonix Designs'});v.outputToResourceEntries(resources.entries);
  }
  resources.outputResource(exe);fs.writeFileSync(target,Buffer.from(exe.generate()));
- // Some mounted build filesystems leave atomic-write staging files behind.
- // Only remove builder-created executable staging files, never runtime assets.
- for(const name of fs.readdirSync(context.appOutDir)){
-  if(/^\.(?:electron|KRYLT)\.exe\.[A-Za-z0-9.]+$/.test(name))fs.rmSync(path.join(context.appOutDir,name),{force:true});
- }
+ const staging=require('./build-staging.cjs');staging.directories.add(context.appOutDir);await staging.clean(context.appOutDir);
 };

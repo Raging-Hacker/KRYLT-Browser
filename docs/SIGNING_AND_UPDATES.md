@@ -43,7 +43,7 @@ This implementation does not distribute a private-repository access token to cli
 
 ## 3. Build a signed release on Windows
 
-Use a clean checkout on the Windows signing PC. Keep the signing token attached/unlocked or authorize the cloud KSP according to its provider. Use Node.js 22 or newer.
+Use a clean checkout on the Windows signing PC. Keep the signing token attached/unlocked or authorize the cloud KSP according to its provider. Use Node.js 22.12 or newer.
 
 ~~~powershell
 npm ci
@@ -75,7 +75,7 @@ The release command:
 - Verifies the app/setup signatures, exact certificate Subject and timestamps. The builder normally removes its signed uninstaller staging file after embedding it; the script also verifies that file if retained.
 - Verifies that latest.yml's installer size and SHA-512 match the final signed EXE and that its blockmap exists.
 
-The pinned integration is electron-builder 26.0.12 plus electron-updater 6.8.11. The build uses the v26 win.signtoolOptions configuration. Do not copy v27 win.sign examples into this version without migrating and testing the toolchain.
+The pinned integration is electron-builder 26.18.0 plus electron-updater 6.8.11. The build uses the v26 win.signtoolOptions configuration. Do not copy v27 win.sign examples into this version without migrating and testing the toolchain.
 
 Windows may still show SmartScreen reputation prompts for a new signed application. Signing establishes a verified publisher and integrity; it does not guarantee immediate reputation or eliminate every Windows prompt.
 
@@ -124,3 +124,4 @@ The supplied repository URL is configured, but real Windows Authenticode signing
 - Microsoft Artifact Signing identity eligibility: https://learn.microsoft.com/en-us/azure/artifact-signing/quickstart
 - DigiCert hardware/cloud key requirements: https://knowledge.digicert.com/alerts/code-signing-changes-in-2023
 - GitHub Releases: https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
+
