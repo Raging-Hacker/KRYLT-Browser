@@ -11,6 +11,9 @@ function Assert-True([bool]$Condition,[string]$Message) { if (-not $Condition) {
 try {
   $first = Start-Process -FilePath $setup -ArgumentList @('/S',"/D=$install") -Wait -PassThru
   Assert-True ($first.ExitCode -eq 0) 'Fresh installation failed'
+  Write-Output ('Requested installation directory: ' + $install)
+  Get-ChildItem -LiteralPath $fixture -Force -Recurse -ErrorAction SilentlyContinue | Select-Object -First 8 FullName
+  Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\App Paths\KRYLT.exe' -ErrorAction SilentlyContinue | Select-Object '(default)'
   Assert-True (Test-Path (Join-Path $install 'KRYLT.exe')) 'Application EXE is missing'
   Assert-True (Test-Path (Join-Path $install '.krylt-install')) 'Installation ownership marker is missing'
   Assert-True ((Get-ItemProperty 'HKLM:\Software\RegisteredApplications').KRYLT -ne $null) 'Browser registration is missing'
@@ -36,3 +39,5 @@ try {
   if (Test-Path $profile) { Remove-Item -LiteralPath $profile -Recurse -Force -ErrorAction SilentlyContinue }
   if (Test-Path $cache) { Remove-Item -LiteralPath $cache -Recurse -Force -ErrorAction SilentlyContinue }
 }
+
+exit 0

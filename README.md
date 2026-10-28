@@ -81,7 +81,7 @@ The installer and app are **unsigned**. Cyclonix Designs appears in the wizard a
 
 Existing normal-profile data is kept in the same userData location; installation does not import another Windows account's data. Close the portable app before installing, then use the installed shortcut. The old portable folder is not removed automatically.
 
-From source, install Node.js 22 or newer, run `npm ci`, then `npm start`. If installation scripts are disabled, run `node node_modules/electron/install.js` first. Run as a normal user; keep the sandbox enabled.
+From source, install Node.js 22.12 or newer, run `npm ci`, then `npm start`. If installation scripts are disabled, run `node node_modules/electron/install.js` first. Run as a normal user; keep the sandbox enabled.
 
 ## Installer features retained
 

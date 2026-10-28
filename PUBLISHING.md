@@ -4,7 +4,7 @@ Publisher: Cyclonix Designs. Repository: https://github.com/Raging-Hacker/KRYLT-
 
 ## Development previews
 
-Use a clean checkout of the commit you intend to distribute. Install Node.js 22+
+Use a clean checkout of the commit you intend to distribute. Install Node.js 22.12+
 and run:
 
 ```powershell

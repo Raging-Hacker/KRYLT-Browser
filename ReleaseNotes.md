@@ -11,6 +11,7 @@ Published by Cyclonix Designs.
 - Google sign-in launches an external browser on Windows even when KRYLT is default.
 - Normal-session restore, opt-in inactive-tab sleeping, live performance monitor and PNG screenshots.
 - Recognized-installation cleanup before setup; explicit uninstall removes app profiles/vaults/caches.
+- Update the build toolchain to patched dependencies and add an audit gate.
 - Repair publishing helper and add automated tests and build checks.
 
 Unsigned development preview. Updates retain browser data; explicit uninstall

@@ -1,7 +1,7 @@
 {
   "name": "krylt",
   "version": "3.0.0-dev.9",
-  "description": "KRYLT \u2014 modern browsing by Cyclonix Designs",
+  "description": "KRYLT — modern browsing by Cyclonix Designs",
   "main": "src/main.js",
   "author": "Cyclonix Designs",
   "license": "UNLICENSED",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "electron": "45.1.0",
-    "electron-builder": "26.0.12",
+    "electron-builder": "26.18.0",
     "pe-library": "2.0.1",
     "resedit": "3.1.0"
   },
@@ -67,12 +67,15 @@
         ]
       }
     ],
-    "copyright": "Copyright \u00a9 2026 Cyclonix Designs"
+    "copyright": "Copyright © 2026 Cyclonix Designs"
   },
   "dependencies": {
     "electron-updater": "6.8.11",
     "google-auth-library": "^10.3.0",
     "js-yaml": "4.3.2",
     "parse5": "^7.3.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
