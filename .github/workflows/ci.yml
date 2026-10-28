@@ -1,0 +1,54 @@
+name: Browser checks
+on:
+  push:
+    branches: [main, 'fix/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - name: Electron integration flows
+        run: xvfb-run -a npm run test:integration
+        env:
+          KRYLT_TEST_UNSANDBOXED: '1'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: electron-ui-results
+          path: qa-output/
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - name: Check cleanup script paths and junction handling
+        shell: powershell
+        run: .\test\installer-cleanup.test.ps1
+      - name: Compile unsigned Windows preview
+        run: npm run dist:win
+      - name: Exercise Windows install, replacement and uninstall
+        shell: powershell
+        run: .\test\windows-lifecycle.test.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-preview
+          path: |
+            dist/*Setup-x64.exe
+            dist/*.blockmap

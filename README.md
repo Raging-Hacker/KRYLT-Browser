@@ -1,4 +1,51 @@
-# KRYLT 3.0.0-dev.8
+# KRYLT 3.0.0-dev.9
+
+
+## New in dev.9
+
+Published by **Cyclonix Designs**. This update fixes the Settings default-browser
+button and password-form utility buttons, adds individual/selected history deletion
+and search, and moves tabs above the address bar. Overflow tabs appear in a native
+**More** menu; **Ctrl+Shift+A** searches every open tab. Site tabs and bookmarks use
+page favicons or recognizable bundled service marks instead of letter avatars.
+
+The sidebar adds Discord, Twitch, TikTok and YouTube Studio alongside WhatsApp,
+YouTube Music and AI services. Clicking the underlying website dismisses the
+floating panel without changing the page's URL or size. Escape and the close button
+also dismiss it; the service remains loaded until unloaded through Settings.
+
+Normal tabs restore on startup (disable in Performance settings). Background
+restored pages remain asleep until selected. Private tabs are never saved or added
+to the reopen-closed list. Ctrl+Shift+T reopens a recently closed normal tab.
+Performance shows live CPU and memory usage, offers manual tab sleeping and cache
+cleanup, and supports optional sleeping after 5/15/30 inactive minutes. Sleeping
+reloads the page and may lose unsaved input. Audible/captured pages, the active tab
+and tabs during active downloads remain running. These are memory-saving controls,
+not hard CPU/RAM quotas. Ctrl+Shift+S saves a PNG of the current page.
+
+Password generation no longer submits the login form. Reveal displays the password
+after native confirmation, then clears it after 15 seconds, lock or panel departure.
+Vault restore is canceled if the vault locks while decryption/confirmation is in
+progress. Google authentication selects an installed external browser on Windows,
+including when KRYLT is the system default; live OAuth still needs your registered
+Desktop client and validation with real accounts.
+
+Setup checks the selected folder before extraction. It removes stale contents only
+from a recognized KRYLT/legacy installation, keeps the old uninstaller available
+for the builder's upgrade step, and refuses unrelated nonempty folders. Updates
+retain browser profiles. **Explicit uninstall permanently deletes KRYLT and legacy
+app profiles, vaults, cookies, history, settings and updater caches from accessible
+Windows profiles**, plus app registrations and shortcuts. Export an encrypted vault
+backup first if needed. Uninstall does not search for or delete personal downloads,
+exported backups, separately extracted portable copies, or cloud Drive backups.
+Locked/inaccessible/redirected profile folders are reported if cleanup is incomplete.
+The custom cleaner handles all known app profile paths; the builder's separate
+single-user data cleaner is disabled to avoid duplicate traversal of redirected paths.
+
+Run `npm run check`, `npm test` and `npm run test:integration`. The committed Electron
+fixture covers real shell/HTTPS credential flows with test dialogs and a test-only
+container sandbox substitution. GitHub Actions checks Linux UI flows and Windows
+cleanup/builds. See `docs/GX_FEATURE_REVIEW.md` for the selected GX-inspired features.
 
 Windows x64 desktop browser development build with dedicated KRYLT branding, transparent eagle logo, KRYLT landing artwork, collapsible sidebar, Google search and direct Canva access.
 
@@ -20,17 +67,17 @@ The public update repository is configured as Raging-Hacker/KRYLT-Browser. The p
 
 Read **docs/SIGNING_AND_UPDATES.md** for certificate setup, Windows signing commands, publishing the EXE + blockmap + latest.yml, bootstrap installation and the Windows A-to-B upgrade test. The current source includes npm run release:win with required signing and post-build signature/timestamp/checksum checks. No real signing identity or live update release has been configured yet. The guide includes free signing routes and their eligibility/trust limits.
 
-The dev.8 preview includes the updater but keeps it disabled until a verified signing identity is configured. The public release repository is Raging-Hacker/KRYLT-Browser, matching its current canonical GitHub name.
+The dev.9 preview includes the updater but keeps it disabled until a verified signing identity is configured. The public release repository is Raging-Hacker/KRYLT-Browser, matching its current canonical GitHub name.
 
 ## Install on Windows
 
-Run `KRYLT-3.0.0-dev.8-Setup-x64.exe`. This is a full offline Windows x64 installer, not the portable app launcher. It requests administrator access, defaults to Program Files on your Windows drive, and lets you choose another destination. Setup adds Start menu/desktop shortcuts and an entry in Windows Installed apps, including an uninstaller.
+Run `KRYLT-3.0.0-dev.9-Setup-x64.exe`. This is a full offline Windows x64 installer, not the portable app launcher. It requests administrator access, defaults to Program Files on your Windows drive, and lets you choose another destination. Setup adds Start menu/desktop shortcuts and an entry in Windows Installed apps, including an uninstaller.
 
 The wizard introduces KRYLT's existing features and identifies **Cyclonix Designs** as the developer. On the final page, the optional **Choose KRYLT as my default browser** checkbox opens Windows Settings. Choose KRYLT and confirm **Set default**. This choice starts unchecked. Setup registers HTTP and HTTPS support without replacing your current default. You can open the same Settings page later from KRYLT Settings > About & reset.
 
 On Windows 10 or older Windows 11 releases, the Settings link may open the general Default apps page; select KRYLT there. This build registers web links only; local HTML file opening is not implemented.
 
-The installer and app are **unsigned**. Cyclonix Designs appears in the wizard and file metadata, but Windows can show **Unknown publisher** until a code-signing certificate is provisioned. Windows 10/11 x64 installation and runtime need a real Windows smoke test. The monthly updater is included and waits for verified signing configuration. Uninstall keeps the current user's browser profile and vault; store a separate encrypted vault backup before migrating PCs or profiles.
+The installer and app are **unsigned**. Cyclonix Designs appears in the wizard and file metadata, but Windows can show **Unknown publisher** until a code-signing certificate is provisioned. Windows 10/11 x64 installation and runtime need a real Windows smoke test. The monthly updater is included and waits for verified signing configuration. Explicit uninstall removes app profiles and vaults. Store a separate encrypted vault backup before uninstalling or migrating PCs.
 
 Existing normal-profile data is kept in the same userData location; installation does not import another Windows account's data. Close the portable app before installing, then use the installed shortcut. The old portable folder is not removed automatically.
 
@@ -49,7 +96,7 @@ From source, install Node.js 22 or newer, run `npm ci`, then `npm start`. If ins
 
 - Collapsible navigation sidebar with persisted expanded/collapsed state.
 - Click-to-toggle floating WhatsApp Web, YouTube Music and AI panels (ChatGPT, Gemini, Claude). Panels overlay the existing page without changing its URL or size. Header controls reload, close and open the app in a full tab; Escape closes it.
-- Sidebar app sessions share the normal browsing profile. They are unavailable in private tabs. Closing hides and retains an app; Unload sidebar apps releases its views. Hidden apps are muted by default. Five app views maximum are created, on demand.
+- Sidebar app sessions share the normal browsing profile. They are unavailable in private tabs. Closing hides and retains an app; Unload sidebar apps releases its views. Hidden apps are muted by default. Nine app views maximum are created, on demand.
 - A bookmark bar below the address bar; right-click for Open, Rename and Delete. The bookmark manager supports inline rename and delete. Titles are limited to 120 characters. No modal prompt implementation is required.
 - Categorized, searchable settings: appearance, sidebar apps, privacy/permissions, downloads, extensions and About/reset.
 - Functional controls for wallpaper, bookmark bar, sidebar collapse, page zoom, panel width, default AI service, hidden app audio, sidebar shortcut visibility, notification/media prompts, download folder/save prompts, separate browsing-data clearing, theme/extension management, and reset.
@@ -59,7 +106,7 @@ Services may reject embedded-browser sign-in, require an account or subscription
 
 ## Browser features
 
-Real remote pages use WebContentsView rather than iframes. Includes vertical tabs, private tabs, back/forward/reload, bookmarks, history, downloads, domain request filtering, and dark/light appearance. Ctrl+L, Ctrl+T and Ctrl+W are supported. Website permissions are denied by default. Optional native prompts can allow notifications or camera/microphone for the current document; other device access remains denied. Private tabs have separate memory-only sessions and do not share accounts with normal tabs or other private tabs. Downloads remain on disk. Maximum 40 open tabs.
+Real remote pages use WebContentsView rather than iframes. Includes horizontal tabs with overflow, private tabs, back/forward/reload, bookmarks, history, downloads, domain request filtering, and dark/light appearance. Ctrl+L, Ctrl+T and Ctrl+W are supported. Website permissions are denied by default. Optional native prompts can allow notifications or camera/microphone for the current document; other device access remains denied. Private tabs have separate memory-only sessions and do not share accounts with normal tabs or other private tabs. Downloads remain on disk. Maximum 40 open tabs.
 
 ## Engine: precise compatibility statement
 
@@ -85,7 +132,7 @@ The source logo had an opaque checkerboard; an image-editing pass removed that b
 
 Remote pages have no Node integration or preload bridge. Sandbox, context isolation, web security and site-per-process are enabled. The browser UI has a restrictive CSP. Privileged commands validate the sender and main frame. Main-frame navigation is restricted to HTTP(S); native scheme navigation and shell execution are not exposed. Filtering uses a small domain list, not a full production blocking engine.
 
-Not implemented: full Chromium fork, latest-patch parity, production security audit, malicious-URL reputation provider, custom fingerprint randomization, signed installer, signed automatic updates, full extension ecosystem, production-audited password manager, profile UI, named workspaces, tab groups, restored sessions, sync, native AI inference, wallet, rewards, VPN, conferencing. Do not treat this as an audited production browser.
+Not implemented: full Chromium fork, latest-patch parity, production security audit, malicious-URL reputation provider, custom fingerprint randomization, signed installer, signed automatic updates, full extension ecosystem, production-audited password manager, profile UI, named workspaces, named tab groups, sync, native AI inference, wallet, rewards, VPN, conferencing. Do not treat this as an audited production browser.
 
 Settings/bookmarks/history are stored in the app's userData directory. Metadata is not separately encrypted. No KRYLT analytics backend is configured. Websites and Google receive normal requests. Existing v1 Studio project data may remain in the previous metadata file, but there is no editor or project API in this version.
 
@@ -146,3 +193,4 @@ Open **Passwords** in the sidebar. Create a separate vault passphrase of at leas
 Google backup code is implemented but **not live-configured**. Import a registered Desktop OAuth client JSON under Passwords to enable the external-browser sign-in flow. Tokens remain in memory. Backups are manual encrypted Drive app-data snapshots, not Google Password Manager/Chrome Sync integration. See `docs/GOOGLE_BACKUP_SETUP.md`. Live Google sign-in and Drive transfers remain unverified.
 
 No passphrase reset or recovery bypass is available. Keep the passphrase and an encrypted backup safe. This development implementation has not received independent security review and should not yet hold important real-world credentials.
+
