@@ -1,0 +1,41 @@
+name: KRYLT Alpha Build and Tests
+on:
+  push:
+    branches:
+      - feature/krylt-alpha-1.0.0-file-tabs-vault
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: |
+          node --check src/main.js
+          node --check src/ui.js
+          node --check src/login-preload.js
+          node --check src/file-support.js
+  windows-installer:
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KRYLT-1.0.0-alpha.1-unsigned-setup
+          path: dist/KRYLT-1.0.0-alpha.1-Setup-x64.exe
+          if-no-files-found: error
+          retention-days: 14

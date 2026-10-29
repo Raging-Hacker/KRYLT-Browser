@@ -1,7 +1,7 @@
 {
   "name": "krylt",
-  "version": "3.0.0-dev.8",
-  "description": "KRYLT \u2014 modern browsing by Cyclonix Designs",
+  "version": "1.0.0-alpha.1",
+  "description": "KRYLT — modern browsing by Cyclonix Designs",
   "main": "src/main.js",
   "author": "Cyclonix Designs",
   "license": "UNLICENSED",
@@ -64,7 +64,7 @@
         ]
       }
     ],
-    "copyright": "Copyright \u00a9 2026 Cyclonix Designs"
+    "copyright": "Copyright © 2026 Cyclonix Designs"
   },
   "dependencies": {
     "electron-updater": "6.8.11",
