@@ -1,3 +1,15 @@
+# KRYLT dev.10 validation — 29 October 2026
+
+- 56 automated tests pass, including local email/password profiles, legacy vault migration, wrong-password rejection, Google account/device-encryption boundaries, portable backup restore preserving the profile password, Guard whitelist boundaries/counters, search region handling and resource-setting bounds.
+- Linux Electron integration passes for the new profile UI and existing vault capture/fill, tabs, icons, Guard whitelist and native floating-panel resizing. Only test fixtures substitute dialogs, the single-instance lock, sandbox and a pinned localhost certificate.
+- Windows CI passes fresh installation, in-place replacement retaining the vault, silent keep-data uninstall, reinstall and explicit /REMOVEUSERDATA removal of profile/cache plus browser registration cleanup. Interactive Yes/No prompts and real user UAC presentation still need a client smoke test.
+- Resource limits are adaptive tab/RAM/CPU budgets, not hard OS quotas. Protected/active/media tabs can exceed budgets. GPU percentage caps are unavailable. CPU/GPU rendering changes require restart.
+- Network location is opt-in and approximate (country/city from public IP), not hardware GPS. Lookup/parsing and regional query changes are covered by fixtures; live website location providers and real Google OAuth accounts are not exercised.
+- Publisher Google OAuth configuration is required to enable Google sign-in. Clients can create local profiles without it. No credentials, signing certificate or live Google client have been fabricated.
+- This remains an unsigned preview with automatic updates disabled pending trusted signing configuration.
+
+Earlier validation follows.
+
 # KRYLT dev.9 validation
 
 28 October 2026
