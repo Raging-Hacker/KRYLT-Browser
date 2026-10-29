@@ -15,7 +15,7 @@ WineVmManager.prototype.exec=async function(file,args=[]){
 };
 const config={};
 if((process.env.KRYLT_ELECTRON_DIST||process.env.TEMPEST_ELECTRON_DIST))config.electronDist=process.env.KRYLT_ELECTRON_DIST||process.env.TEMPEST_ELECTRON_DIST;
-build({projectDir,targets:Platform.WINDOWS.createTarget(['nsis'],Arch.x64),config}).catch(error=>{
+build({projectDir,targets:Platform.WINDOWS.createTarget(['nsis'],Arch.x64),config,publish:'never'}).catch(error=>{
  console.error(error.message||error);process.exitCode=1;
 });
 

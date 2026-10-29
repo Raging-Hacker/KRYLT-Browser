@@ -1,3 +1,17 @@
+# KRYLT 3.0.0-dev.10
+
+This update fixes the title-bar drag region, responsive bookmark overflow, multi-provider AI icon and camera screenshot button. Floating panels resize from their left edge or bottom-left corner. KRYLT Guard has persistent counters, a site whitelist and stricter popup/cross-site redirect handling.
+
+New profiles use an email and password. Existing vaults require the previous vault password once to migrate saved logins. Optional Google profiles use verified Google sign-in and the device's secure encryption; a registered Desktop OAuth client is still required. Exported/Google backups use a separate backup password so they remain portable.
+
+Performance offers maximum live tabs, keep-awake tabs, adaptive RAM/CPU budgets and CPU/GPU rendering selection (restart required). Budgets can be exceeded by the active/protected tabs and browser overhead. A GPU percentage hard cap is not supported by Electron and is explicitly unavailable. Approximate search location is opt-in, uses the public IP through ipapi.co, and is not hardware GPS; clear it in Privacy settings.
+
+Uninstall now asks whether to keep or remove all KRYLT browser data. Keeping data is the default, including silent uninstalls. Explicit automation may use /REMOVEUSERDATA to remove app-specific data. Upgrades retain profiles. Export an encrypted password backup before removing data.
+
+This preview is unsigned. Monthly updates remain disabled until a trusted signing identity is configured. The validation history below describes earlier builds and does not prove live Google sign-in, GPU driver behaviour or the new Windows lifecycle checks.
+
+---
+
 # KRYLT 3.0.0-dev.9
 
 

@@ -8,7 +8,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.js",
-    "dist:win": "electron-builder --win nsis --x64",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
     "dist:linux": "electron-builder --linux dir",
     "dist:win:linux": "node scripts/build-windows-linux.cjs",
     "release:win": "node scripts/release-windows.cjs",

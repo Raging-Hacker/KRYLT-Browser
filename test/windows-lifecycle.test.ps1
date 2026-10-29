@@ -25,6 +25,12 @@ try {
   Assert-True ($upgrade.ExitCode -eq 0) 'In-place installation failed'
   Assert-True (-not (Test-Path (Join-Path $install 'obsolete-runtime.txt'))) 'Old program files survived replacement'
   Assert-True (Test-Path (Join-Path $profile 'password-vault.json')) 'Upgrade deleted the vault'
+  $keep = Start-Process -FilePath (Join-Path $install 'Uninstall KRYLT.exe') -ArgumentList '/S' -Wait -PassThru
+  Assert-True ($keep.ExitCode -eq 0) 'Keep-data uninstall failed'
+  for ($attempt=0; $attempt -lt 100 -and (Test-Path (Join-Path $install 'KRYLT.exe')); $attempt++) { Start-Sleep -Milliseconds 100 }
+  Assert-True (Test-Path (Join-Path $profile 'password-vault.json')) 'Keep-data uninstall deleted the vault'
+  $again = Start-Process -FilePath $setup -ArgumentList @('/S',"/D=$install") -Wait -PassThru
+  Assert-True ($again.ExitCode -eq 0) 'Reinstall after keeping data failed'
   $uninstall = Start-Process -FilePath (Join-Path $install 'Uninstall KRYLT.exe') -ArgumentList '/S /REMOVEUSERDATA' -Wait -PassThru
   Assert-True ($uninstall.ExitCode -eq 0) 'Explicit uninstall failed'
   for ($attempt=0; $attempt -lt 100 -and (Test-Path (Join-Path $install 'KRYLT.exe')); $attempt++) { Start-Sleep -Milliseconds 100 }
