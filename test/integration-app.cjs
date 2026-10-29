@@ -15,10 +15,13 @@ let menu=[],dialogReply=1,dialogCalls=0;
 Menu.buildFromTemplate=entries=>{menu=entries;return {popup(){}};};
 dialog.showMessageBox=async()=>{dialogCalls++;return {response:dialogReply};};
 dialog.showSaveDialog=async()=>({canceled:false,filePath:path.join(output,'page-snapshot.png')});
-let requestCount=0,secondaryOrigin;
+let requestCount=0,secondaryOrigin,primaryOrigin,networkUnavailable=true;
 const tls={key:fs.readFileSync(path.join(__dirname,'fixtures/localhost.key.pem')),cert:fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'))};
-const secondary=https.createServer(tls,(_req,res)=>{res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Embedded player</title><h1 id="embedded-player">Embedded player ready</h1>');});
+const secondary=https.createServer(tls,(req,res)=>{if(req.url==='/auth-hop'){res.writeHead(303,{Location:primaryOrigin+'/signed-in'});res.end();return;}res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Embedded player</title><h1 id="embedded-player">Embedded player ready</h1>');});
 const server=https.createServer(tls,(req,res)=>{requestCount++;
+ if(req.url==='/sso-start'){res.writeHead(302,{Location:secondaryOrigin+'/auth-hop'});res.end();return;}
+ if(req.url==='/auto-login'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Signing in</title><script>setTimeout(()=>location.href='+JSON.stringify(secondaryOrigin+'/auth-hop')+',100)</script>');return;}
+ if(req.url==='/signed-in'||req.url==='/retry-page'){if(req.url==='/retry-page'&&networkUnavailable){req.socket.destroy();return;}res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Signed-in application</title><h1 id=app-content>Application loaded successfully</h1>');return;}
  if(req.url==='/frame-redirect'){res.writeHead(302,{Location:secondaryOrigin+'/player'});res.end();return;}
  if(req.url==='/download'){res.writeHead(200,{'Content-Type':'application/octet-stream','Content-Disposition':'attachment; filename="unwanted.exe"'});res.end('fixture download');return;}
  res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Fixture website</title><h1>Fixture website</h1><button id="page-click">Page button</button><form action="/login"><input name="username" type="email" autocomplete="username" value="fixture@example.com"><input name="password" type="password" autocomplete="current-password" value="fixture-password"></form>');});
@@ -26,7 +29,7 @@ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function capture(wc){await pause(180);for(let retry=0;retry<4;retry++){try{return await wc.capturePage();}catch(error){if(retry===3)throw error;await pause(150);}}}
 async function until(fn,label){for(let attempt=0;attempt<100;attempt++){if(await fn())return;await pause(80);}throw Error('Timed out: '+label);}
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='https://127.0.0.1:'+server.address().port;
-await new Promise(resolve=>secondary.listen(0,'127.0.0.1',resolve));secondaryOrigin='https://127.0.0.1:'+secondary.address().port;
+primaryOrigin=origin;await new Promise(resolve=>secondary.listen(0,'127.0.0.1',resolve));secondaryOrigin='https://127.0.0.1:'+secondary.address().port;
 app.on('certificate-error',(event,_wc,url,_error,certificate,callback)=>{if((url.startsWith(origin+'/')||url.startsWith(secondaryOrigin+'/'))&&certificate.data.trim()===fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'),'utf8').trim()){event.preventDefault();callback(true);}else callback(false);});
 for(const tool of Object.values(require('../src/tools').TOOLS))tool.url=origin+'/tool';
 require('../src/main');
@@ -85,6 +88,30 @@ fs.writeFileSync(path.join(output,'movies-toolbar.png'),(await capture(chrome.we
 await command('guard-panel');await until(()=>js('document.querySelector("#panelTitle").textContent==="KRYLT Guard"'),'workspace Guard metrics');
 assert.equal(dialogCalls,beforeDialogs);await js('document.querySelector("#closePanel").click()');await command('tool-close');
 checks.push('Movies: native click popup + flood silently denied, top-level redirects blocked, embedded-player redirect allowed, dialogs and downloads suppressed, isolated storage, expansion, Back and visible Guard counts');
+
+// Start from an already loaded page, as with the reported blank Salesforce
+// page. The previous policy aborted this chain after comparing old/new origins.
+await command('navigate',origin+'/compat-before');
+await until(()=>win.contentView.children.some(v=>v.webContents?.getURL()===origin+'/compat-before'&&!v.webContents.isLoading()),'compatibility source page');
+const compat=win.contentView.children.find(v=>v.webContents?.getURL()===origin+'/compat-before');
+await command('navigate',origin+'/sso-start');
+await until(()=>compat.webContents.getURL()===origin+'/signed-in'&&!compat.webContents.isLoading(),'cross-origin 302/303 sign-in chain');
+assert.equal(await compat.webContents.executeJavaScript('document.querySelector("#app-content").textContent'),'Application loaded successfully');
+await command('navigate',origin+'/auto-login');
+await until(()=>compat.webContents.getURL()===origin+'/signed-in'&&!compat.webContents.isLoading(),'delayed script sign-in routing');
+assert.equal(await js('document.querySelector("#pageError").hidden'),true);
+checks.push('Normal 302/303 cross-origin login chains and delayed app routing render real content without whitelisting');
+await command('navigate',origin+'/retry-page');
+await until(()=>js('!document.querySelector("#pageError").hidden'),'visible network failure');
+assert.equal(await js('document.querySelector("#pageErrorAddress").textContent'),origin+'/retry-page');
+fs.writeFileSync(path.join(output,'page-load-error.png'),(await capture(wc)).toPNG());
+await js('document.querySelector("#pageError [data-panel=guard]").click()');
+await until(()=>js('document.querySelector("#panelTitle").textContent==="KRYLT Guard"'),'error protection settings');
+await js('document.querySelector("#closePanel").click()');assert.equal(await js('document.querySelector("#pageError").hidden'),false);
+networkUnavailable=false;await js('document.querySelector("#pageError [data-cmd=reload]").click()');
+await until(()=>compat.webContents.getURL()===origin+'/retry-page'&&!compat.webContents.isLoading()&&compat.webContents.executeJavaScript('!!document.querySelector("#app-content")'),'retry recovers the page');
+await until(()=>js('document.querySelector("#pageError").hidden'),'retry clears failure UI');
+checks.push('Real network failure shows retry screen; protection panel return and retry recover visible content');
 
 // Keep a normal page open for the saved-session assertion after window closure.
 await command('navigate',origin+'/normal-session');await pause(300);win.close();await pause(80);const saved=JSON.parse(fs.readFileSync(path.join(profile,'tempest-ultra','tempest.json'),'utf8'));assert.ok(saved.session.some(entry=>entry.url.endsWith('/normal-session')));assert.equal(JSON.stringify(saved.session).includes('private-secret'),false);checks.push('Session survives window closure and excludes private tabs');

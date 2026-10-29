@@ -1,3 +1,11 @@
+# KRYLT dev.12 validation — 29 October 2026
+
+- Regression tests cover Salesforce-style cross-origin server/script/frame routing, arbitrary identity-provider destinations, known ad redirects, privileged schemes and unchanged strict Movies boundaries.
+- Page lifecycle tests cover main-document errors, subframe failures, cancelled loads, retry state and renderer failures.
+- Electron integration exercises an actual cross-origin HTTPS 302/303 login chain from an existing page, delayed client-side sign-in routing, a real disconnected-response failure, recovery UI, return from Protection settings and successful retry.
+- Existing popup-flood, Movies containment, embedded-player, vault and UI regressions remain in the integration suite. Windows installation/upgrade/keep/remove-data checks run on the final build.
+- No live Salesforce account or organization data is accessed. TLS validation, sandboxing and web security remain enabled in production. The pinned localhost certificate and sandbox substitution exist only in the excluded test harness.
+
 # KRYLT dev.11 validation — 29 October 2026
 
 - 63 Node tests pass. New regressions cover real-click popup policy, popup floods, trusted exceptions, strict service-host boundaries, main-frame takeovers, embedded-player redirects and unload traps.

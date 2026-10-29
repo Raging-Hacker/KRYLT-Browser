@@ -33,11 +33,20 @@ test('embedded-player redirects continue inside their frame while their top-leve
  assert(!f.navigate('https://player.example/embed',{main:false}));assert(!f.navigate('https://cdn.example/player',{main:false,redirect:true}));
  assert(f.navigate('https://advert.example/',{child:true}));assert.equal(f.counts.redirects,1);
 });
-test('ordinary cross-site links work; stale script navigation, frame takeovers and server redirects are stopped',()=>{
- const f=fixture();assert(f.navigate('https://other.example/'));f.click();assert(!f.navigate('https://other.example/'));
- assert(f.navigate('https://other.example/',{child:true}));assert(f.navigate('https://other.example/',{redirect:true}));
- f.advance(1100);assert(f.navigate('https://other.example/'));assert(!f.navigate('https://catalogue.example/next'));
- f.guard.add('catalogue.example');assert(!f.navigate('https://other.example/',{redirect:true}));
+test('ordinary server and script redirects remain compatible with Salesforce and other sign-in providers',()=>{
+ const f=fixture({url:'https://thecourierguy.my.salesforce.com/home/home.jsp?std=1'});
+ for(const url of ['https://login.salesforce.com/','https://thecourierguy.lightning.force.com/lightning/page/home','https://identity.example.org/sso']){
+  assert(!f.navigate(url,{redirect:true}));assert(!f.navigate(url));assert(!f.navigate(url,{child:true}));
+ }
+ assert.equal(f.guard.counts.redirects,0);
+});
+test('ordinary redirects block known advertising destinations while preserving the trusted-site exception',()=>{
+ const f=fixture();assert(f.navigate('https://ads.doubleclick.net/click',{redirect:true}));assert(f.navigate('https://googleadservices.com/pagead',{child:true}));
+ assert(f.navigate('file:///secret'));assert(!f.navigate('https://catalogue.example/next'));
+ f.guard.add('catalogue.example');assert(!f.navigate('https://doubleclick.net/click',{redirect:true}));
+});
+test('disabling ordinary redirect filtering never enables privileged schemes',()=>{
+ const f=fixture();f.settings.blockRedirects=false;assert(!f.navigate('https://doubleclick.net/click',{redirect:true}));assert(f.navigate('javascript:alert(1)'));
 });
 test('dedicated workspace enforces its root during initial load and prevents unload traps',()=>{
  const f=fixture({url:'',movieRoot:'https://127.0.0.1:4321/tool'});

@@ -1,3 +1,17 @@
+# KRYLT 3.0.0-dev.12
+
+Published by Cyclonix Designs.
+
+- Fix the overbroad cross-site redirect rule that could leave legitimate websites and sign-in pages blank.
+- Preserve normal server redirect chains, delayed client-side routing and frame-driven app navigation.
+- Keep advertising-destination filtering, popup blocking and strict Movies containment.
+- Show an actionable page-load failure screen instead of an empty view on network or renderer failure.
+- Retry the intended address, preserve working pages when subresources fail, and display a destination hostname while loading a new tab.
+
+Unsigned preview. Live signed-in Salesforce account testing remains outside the automated fixture checks.
+
+---
+
 # KRYLT 3.0.0-dev.11
 
 Published by Cyclonix Designs.

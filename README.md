@@ -1,3 +1,13 @@
+# KRYLT 3.0.0-dev.12
+
+Fix blank pages caused by cancelling ordinary cross-origin sign-in and application redirects. Normal server redirects (including 302/303 chains), delayed JavaScript routing and frame-driven application navigation can complete. Known advertising destinations remain filtered; Movies retains its stricter popup and navigation containment.
+
+Main-document network or renderer failures now show a page with Try again, Back, Home and Protection settings. Retrying uses the intended web address. Failed subresources and cancelled/superseded navigations do not replace a working page. A new tab displays its destination hostname while waiting for the site title.
+
+Previous profile, vault, bookmark, installer and Movies changes are retained. This unsigned preview does not enable automatic updates. Testing uses controlled login-style fixtures; no live Salesforce account or organization data is accessed.
+
+---
+
 # KRYLT 3.0.0-dev.11
 
 Movies opens the requested Soap2Day website in a dedicated, expandable workspace with separate site storage, Back, Home, Reload, and live Guard counters. Use the Movies shortcut in the sidebar. Restoring the floating layout enables the existing resize handles.

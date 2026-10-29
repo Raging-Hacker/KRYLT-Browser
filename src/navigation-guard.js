@@ -1,6 +1,6 @@
 'use strict';
-const {webURL}=require('./policy');
-const {allowed,sameSite}=require('./guard');
+const {webURL,shouldBlock}=require('./policy');
+const {allowed}=require('./guard');
 // Observed site advert: a fixed overlay containing a srcdoc extension pitch.
 // Match its actual copy and fixed wrapper, never generic player iframes.
 const MOVIE_AD_CSS='iframe[srcdoc*="Ad Block Ghost" i], :is(html, body) > div[style*="position: fixed"]:has(iframe[srcdoc*="Ad Block Ghost" i]) { display: none !important; pointer-events: none !important; }';
@@ -28,18 +28,20 @@ function protectNavigation(wc,{guard,settings,changed,openTab,movieRoot=null,now
   if(strict()||!webURL(url)||(s.blockPopups&&!allowed(source,guard.whitelist))||!recent||now()-lastPopup<1500){blocked('popups',url);return {action:'deny'};}
   lastPopup=now();gesture=0;openTab(url);return {action:'deny'};
  });
- function check(event,url,isMainFrame=true,redirect=false){
+ function check(event,url,isMainFrame=true){
   if(!isMainFrame)return; // Cross-origin player-frame redirects are legitimate.
-  const source=wc.getURL(),initiator=event.initiator;
+  const source=wc.getURL();
   const movie=strict();
-  const childInitiated=!!initiator&&initiator!==wc.mainFrame;
-  const recent=gesture>0&&now()-gesture<1000;
+  // Ordinary sites use server, script and frame-driven redirects for sign-in
+  // and app routing. Cross-origin alone is not evidence of an advertising hop.
+  // Keep strict containment scoped to Movies; ordinary navigation blocks known
+  // advertising destinations while Chromium enforces frame security normally.
   const deny=!webURL(url)||(movie&&!movieURL(url,movieRoot||undefined))||
-   (!movie&&settings().blockRedirects&&webURL(source)&&!sameSite(source,url)&&!allowed(source,guard.whitelist)&&(redirect||childInitiated||!recent));
+   (!movie&&settings().blockRedirects&&!allowed(source,guard.whitelist)&&shouldBlock(url));
   if(deny){event.preventDefault();blocked('redirects',url);}
  }
  wc.on('will-frame-navigate',event=>check(event,event.url,event.isMainFrame));
- wc.on('will-redirect',(event,url,_inPlace,isMainFrame)=>check(event,event.url||url,event.isMainFrame??isMainFrame??true,true));
+ wc.on('will-redirect',(event,url,_inPlace,isMainFrame)=>check(event,event.url||url,event.isMainFrame??isMainFrame??true));
  wc.on('will-prevent-unload',event=>{if(strict())event.preventDefault();});
  return counts;
 }
