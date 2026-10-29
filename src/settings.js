@@ -1,10 +1,15 @@
 'use strict';
-const DEFAULT_SETTINGS=Object.freeze({shield:true,light:false,bookmarksBar:true,wallpaper:true,collapsed:false,zoom:100,toolWidth:480,backgroundAudio:false,aiProvider:'chatgpt',showWhatsApp:true,showAI:true,showMusic:true,showDiscord:true,showTwitch:true,showTikTok:true,showStudio:true,restoreSession:true,suspendMinutes:0,notificationsPrompt:false,mediaPrompt:false,askDownload:true,downloadPath:''});
+const DEFAULT_SETTINGS=Object.freeze({shield:true,light:false,bookmarksBar:true,wallpaper:true,collapsed:false,zoom:100,toolWidth:480,backgroundAudio:false,aiProvider:'chatgpt',showWhatsApp:true,showAI:true,showMusic:true,showDiscord:true,showTwitch:true,showTikTok:true,showStudio:true,restoreSession:true,suspendMinutes:0,maxLiveTabs:12,maxRAM:0,maxCPU:0,renderMode:'gpu',toolHeight:650,blockPopups:true,blockRedirects:true,locationPrompt:false,notificationsPrompt:false,mediaPrompt:false,askDownload:true,downloadPath:''});
 const BOOL=new Set(Object.entries(DEFAULT_SETTINGS).filter(([,v])=>typeof v==='boolean').map(([k])=>k));
 function validateSetting(key,value){
  if(BOOL.has(key)&&typeof value==='boolean')return value;
+ if(key==='maxLiveTabs'&&Number.isInteger(value)&&value>=1&&value<=40)return value;
+ if(key==='maxRAM'&&Number.isInteger(value)&&(value===0||value>=512&&value<=65536))return value;
+ if(key==='maxCPU'&&Number.isInteger(value)&&value>=0&&value<=100)return value;
+ if(key==='renderMode'&&['cpu','gpu'].includes(value))return value;
+ if(key==='toolHeight'&&Number.isInteger(value)&&value>=260&&value<=1600)return value;
  if(key==='zoom'&&Number.isInteger(value)&&value>=50&&value<=200)return value;
- if(key==='toolWidth'&&Number.isInteger(value)&&value>=320&&value<=900)return value;
+ if(key==='toolWidth'&&Number.isInteger(value)&&value>=320&&value<=1600)return value;
  if(key==='suspendMinutes'&&[0,5,15,30].includes(value))return value;
  if(key==='aiProvider'&&['chatgpt','gemini','claude'].includes(value))return value;
  throw Error('Unsupported setting or invalid value');

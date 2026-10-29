@@ -5,7 +5,7 @@
 
 !macro customWelcomePage
   !define MUI_WELCOMEPAGE_TITLE "Welcome to KRYLT"
-  !define MUI_WELCOMEPAGE_TEXT "Modern browsing. Your way.$\r$\n$\r$\nFrom Cyclonix Designs.$\r$\n$\r$\nKeep your favourite web apps close, personalise your workspace and take control of everyday browsing.$\r$\n$\r$\nSetup replaces existing KRYLT program files. Browser data is retained during upgrades. Uninstall permanently deletes app profiles, saved passwords and settings. You can choose the installation folder on the next page."
+  !define MUI_WELCOMEPAGE_TEXT "Modern browsing. Your way.$\r$\n$\r$\nFrom Cyclonix Designs.$\r$\n$\r$\nKeep your favourite web apps close, personalise your workspace and take control of everyday browsing.$\r$\n$\r$\nSetup replaces existing KRYLT program files. Browser data is retained during upgrades. Uninstall lets you keep or remove browser data. You can choose the installation folder on the next page."
   !insertmacro MUI_PAGE_WELCOME
 !macroend
 
@@ -42,7 +42,7 @@ Function KryltBenefits
   Pop $0
   ${NSD_CreateLabel} 0 96u 100% 31u "A workspace that feels like you.$\r$\nThemes, a collapsible sidebar, bookmarks and an encrypted password vault."
   Pop $0
-  ${NSD_CreateLabel} 0 132u 100% 19u "Uninstall removes browser data and saved passwords. Export an encrypted backup first if needed."
+  ${NSD_CreateLabel} 0 132u 100% 19u "Uninstall asks whether to keep or remove browser data and saved passwords."
   Pop $0
   nsDialogs::Show
 FunctionEnd
@@ -99,6 +99,14 @@ FunctionEnd
 
 !macro customUnInstall
   ${IfNot} ${isUpdated}
+    ; Keep data by default, including unattended uninstall. Only explicit consent removes it.
+    ${GetParameters} $2
+    ClearErrors
+    ${GetOptions} $2 "/REMOVEUSERDATA" $3
+    IfErrors 0 krylt_remove_data
+    IfSilent krylt_keep_data
+    MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "Remove KRYLT browser data for all Windows users?$\r$\n$\r$\nYes: permanently delete profiles, saved passwords, cookies and settings.$\r$\nNo: keep browser data for a later reinstall." IDYES krylt_remove_data IDNO krylt_keep_data
+    krylt_remove_data:
     InitPluginsDir
     File /oname=$PLUGINSDIR\krylt-clean-profile.ps1 "${BUILD_RESOURCES_DIR}\clean-profile.ps1"
     nsExec::ExecToStack '"$WINDIR\SysNative\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$PLUGINSDIR\krylt-clean-profile.ps1"'
@@ -107,6 +115,7 @@ FunctionEnd
     ${If} $0 != 0
       MessageBox MB_OK|MB_ICONEXCLAMATION "Some KRYLT profile files could not be deleted (locked or redirected folders). Close remaining browser processes and remove the app-specific folders manually.$\r$\n$1"
     ${EndIf}
+    krylt_keep_data:
   ${EndIf}
   DeleteRegValue HKLM "Software\RegisteredApplications" "Tempest Ultra"
   DeleteRegKey HKLM "Software\Classes\TempestUltraURL"

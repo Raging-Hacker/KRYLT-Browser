@@ -1,7 +1,7 @@
 {
   "name": "krylt",
-  "version": "3.0.0-dev.9",
-  "description": "KRYLT — modern browsing by Cyclonix Designs",
+  "version": "3.0.0-dev.10",
+  "description": "KRYLT \u2014 modern browsing by Cyclonix Designs",
   "main": "src/main.js",
   "author": "Cyclonix Designs",
   "license": "UNLICENSED",
@@ -67,7 +67,7 @@
         ]
       }
     ],
-    "copyright": "Copyright © 2026 Cyclonix Designs",
+    "copyright": "Copyright \u00a9 2026 Cyclonix Designs",
     "artifactBuildStarted": "scripts/clean-build-output.cjs"
   },
   "dependencies": {

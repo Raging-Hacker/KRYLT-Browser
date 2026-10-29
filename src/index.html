@@ -10,14 +10,14 @@
 <header>
  <div class="wordmark"><img src="../assets/logo.png" alt=""><span>KRYLT</span></div>
  <div id="tabstrip" aria-label="Browser tabs"><div id="tabs" role="tablist"></div><button id="moreTabs" title="More tabs" aria-haspopup="menu" hidden>More <span id="moreCount"></span> ▾</button><button id="newTab" title="New tab (Ctrl+T)" aria-label="New tab">+</button><button id="tabSearch" title="Search tabs (Ctrl+Shift+A)" aria-label="Search all tabs">⌄</button></div>
- <div class="window"><button data-cmd="min" title="Minimize">−</button><button data-cmd="max" title="Maximize">□</button><button data-cmd="quit" title="Close">×</button></div>
+ <div id="dragHandle" title="Drag to move KRYLT" aria-label="Move browser">⠿</div><div class="window"><button data-cmd="min" title="Minimize">−</button><button data-cmd="max" title="Maximize">□</button><button data-cmd="quit" title="Close">×</button></div>
 </header>
 <nav aria-label="Navigation">
  <button id="collapse" title="Expand sidebar" aria-label="Toggle sidebar" aria-expanded="false">☰</button>
  <button data-cmd="back" title="Back">←</button><button data-cmd="forward" title="Forward">→</button><button data-cmd="reload" title="Reload">↻</button><button id="homeButton" title="Home" aria-label="Home">⌂</button>
  <form id="addressForm"><span id="connection">⌕</span><input id="address" placeholder="Search Google or enter a URL" autocomplete="off" aria-label="Address and search"><button type="button" id="star" title="Bookmark current page">☆</button></form>
  <button id="saveLogin" title="Save login from this HTTPS page" aria-label="Save login"><svg class="key-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="5"></circle><path d="M12 12l8 8m-4-4l3-3m-6 0l3-3"></path></svg></button>
- <button id="snapshot" title="Save page screenshot (Ctrl+Shift+S)" aria-label="Save page screenshot">▣</button>
+ <button id="snapshot" title="Save page screenshot (Ctrl+Shift+S)" aria-label="Save page screenshot"><svg viewBox="0 0 24 24" class="camera-icon" aria-hidden="true"><path d="M3 6h4l2-3h6l2 3h4v15H3z"/><circle cx="12" cy="13" r="4"/></svg></button>
  <button id="shield" title="Protection settings">◈ <span>Shield</span></button><button id="private" title="New private tab" aria-label="New private tab">◐</button>
 </nav>
 <div id="bookmarkBar" aria-label="Bookmarks bar"></div>

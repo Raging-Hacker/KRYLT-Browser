@@ -17,7 +17,7 @@ try {
   Assert-True (Test-Path (Join-Path $install 'KRYLT.exe')) 'Application EXE is missing'
   Assert-True (Test-Path (Join-Path $install '.krylt-install')) 'Installation ownership marker is missing'
   Assert-True ((Get-ItemProperty 'HKLM:\Software\RegisteredApplications').KRYLT -ne $null) 'Browser registration is missing'
-  New-Item -ItemType Directory -Path $profile,$cache | Out-Null
+  New-Item -ItemType Directory -Path $profile,$cache -Force | Out-Null
   [IO.File]::WriteAllText((Join-Path $profile 'password-vault.json'),'encrypted-vault-fixture')
   [IO.File]::WriteAllText((Join-Path $cache 'fixture'),'cached-installer-fixture')
   [IO.File]::WriteAllText((Join-Path $install 'obsolete-runtime.txt'),'stale')
@@ -25,7 +25,7 @@ try {
   Assert-True ($upgrade.ExitCode -eq 0) 'In-place installation failed'
   Assert-True (-not (Test-Path (Join-Path $install 'obsolete-runtime.txt'))) 'Old program files survived replacement'
   Assert-True (Test-Path (Join-Path $profile 'password-vault.json')) 'Upgrade deleted the vault'
-  $uninstall = Start-Process -FilePath (Join-Path $install 'Uninstall KRYLT.exe') -ArgumentList '/S' -Wait -PassThru
+  $uninstall = Start-Process -FilePath (Join-Path $install 'Uninstall KRYLT.exe') -ArgumentList '/S /REMOVEUSERDATA' -Wait -PassThru
   Assert-True ($uninstall.ExitCode -eq 0) 'Explicit uninstall failed'
   for ($attempt=0; $attempt -lt 100 -and (Test-Path (Join-Path $install 'KRYLT.exe')); $attempt++) { Start-Sleep -Milliseconds 100 }
   Assert-True (-not (Test-Path (Join-Path $install 'KRYLT.exe'))) 'Uninstall retained the runtime'
