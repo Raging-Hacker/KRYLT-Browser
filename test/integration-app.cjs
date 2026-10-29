@@ -2,7 +2,7 @@
 // This harness is excluded from production packages. Only this harness substitutes
 // native dialogs, the single-instance lock and (when explicitly requested) the
 // root-container sandbox. The shipped app keeps its real security settings.
-const {app,BrowserWindow,dialog,Menu}=require('electron');
+const {app,BrowserWindow,dialog,Menu,session}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),https=require('node:https'),assert=require('node:assert/strict'),os=require('node:os');
 app.disableHardwareAcceleration();
 const checks=[];const record=checks.push.bind(checks);checks.push=(...items)=>{console.log('QA_PROGRESS: '+items[0]);return record(...items);};
@@ -11,17 +11,23 @@ process.on('uncaughtException',error=>{console.error('QA_UNCAUGHT',error);fs.wri
 const profile=fs.mkdtempSync(path.join(os.tmpdir(),'krylt-ui-test-'));app.setPath('appData',profile);
 if(process.env.KRYLT_TEST_UNSANDBOXED==='1')app.enableSandbox=()=>{};
 app.requestSingleInstanceLock=()=>true;app.quit=()=>{};
-let menu=[],dialogReply=1;
+let menu=[],dialogReply=1,dialogCalls=0;
 Menu.buildFromTemplate=entries=>{menu=entries;return {popup(){}};};
-dialog.showMessageBox=async()=>({response:dialogReply});
+dialog.showMessageBox=async()=>{dialogCalls++;return {response:dialogReply};};
 dialog.showSaveDialog=async()=>({canceled:false,filePath:path.join(output,'page-snapshot.png')});
-let requestCount=0;
-const server=https.createServer({key:fs.readFileSync(path.join(__dirname,'fixtures/localhost.key.pem')),cert:fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'))},(_req,res)=>{requestCount++;res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Fixture website</title><h1>Fixture website</h1><button id="page-click">Page button</button><form action="/login"><input name="username" type="email" autocomplete="username" value="fixture@example.com"><input name="password" type="password" autocomplete="current-password" value="fixture-password"></form>');});
+let requestCount=0,secondaryOrigin;
+const tls={key:fs.readFileSync(path.join(__dirname,'fixtures/localhost.key.pem')),cert:fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'))};
+const secondary=https.createServer(tls,(_req,res)=>{res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Embedded player</title><h1 id="embedded-player">Embedded player ready</h1>');});
+const server=https.createServer(tls,(req,res)=>{requestCount++;
+ if(req.url==='/frame-redirect'){res.writeHead(302,{Location:secondaryOrigin+'/player'});res.end();return;}
+ if(req.url==='/download'){res.writeHead(200,{'Content-Type':'application/octet-stream','Content-Disposition':'attachment; filename="unwanted.exe"'});res.end('fixture download');return;}
+ res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Fixture website</title><h1>Fixture website</h1><button id="page-click">Page button</button><form action="/login"><input name="username" type="email" autocomplete="username" value="fixture@example.com"><input name="password" type="password" autocomplete="current-password" value="fixture-password"></form>');});
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function capture(wc){await pause(180);for(let retry=0;retry<4;retry++){try{return await wc.capturePage();}catch(error){if(retry===3)throw error;await pause(150);}}}
 async function until(fn,label){for(let attempt=0;attempt<100;attempt++){if(await fn())return;await pause(80);}throw Error('Timed out: '+label);}
 (async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='https://127.0.0.1:'+server.address().port;
-app.on('certificate-error',(event,_wc,url,_error,certificate,callback)=>{if(url.startsWith(origin+'/')&&certificate.data.trim()===fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'),'utf8').trim()){event.preventDefault();callback(true);}else callback(false);});
+await new Promise(resolve=>secondary.listen(0,'127.0.0.1',resolve));secondaryOrigin='https://127.0.0.1:'+secondary.address().port;
+app.on('certificate-error',(event,_wc,url,_error,certificate,callback)=>{if((url.startsWith(origin+'/')||url.startsWith(secondaryOrigin+'/'))&&certificate.data.trim()===fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'),'utf8').trim()){event.preventDefault();callback(true);}else callback(false);});
 for(const tool of Object.values(require('../src/tools').TOOLS))tool.url=origin+'/tool';
 require('../src/main');
 await app.whenReady();await until(()=>BrowserWindow.getAllWindows().length>0,'window');const win=BrowserWindow.getAllWindows()[0],wc=win.webContents;const js=code=>Promise.race([wc.executeJavaScript(code),new Promise((_,reject)=>{const timer=setTimeout(()=>reject(Error('Renderer command timed out: '+code.slice(0,120))),15000);timer.unref();})]),command=(a,p)=>js('window.krylt.command('+JSON.stringify(a)+','+JSON.stringify(p)+')');
@@ -46,7 +52,38 @@ await command('new',true);await command('navigate',origin+'/private-secret');awa
 await js('document.querySelector("#shield").click()');await until(()=>js('document.querySelector("#panelTitle").textContent==="KRYLT Guard"'),'Guard dashboard');await command('guard-add','trusted.example');assert.equal(await js('document.querySelector("#panelBody").innerText.includes("trusted.example")'),true);await command('guard-remove','trusted.example');await js('document.querySelector("#closePanel").click()');
 assert.equal(await js('getComputedStyle(document.querySelector("#dragHandle")).getPropertyValue("-webkit-app-region")'),'drag');assert.equal(await js('document.querySelector("[data-tool=ai]").title.includes("Gemini")'),true);assert.equal(await js('!!document.querySelector("#snapshot svg")'),true);checks.push('Guard whitelist, draggable title bar, multi-provider AI icon and camera icon');
 await command('tool-open','whatsapp');await command('tool-resize',{width:600,height:380});const sized=win.contentView.children.filter(v=>v.webContents?.getURL().includes('/tool'));assert(sized.some(v=>v.getBounds().height===260));await command('tool-close');checks.push('Floating panel width and height apply to native views');
+// Reproduce the recorded failure with actual renderer events: a native Play
+// click opens an ad, a burst follows, and a player frame redirects separately.
+await command('tool-open','movies');
+await until(()=>win.contentView.children.some(v=>v.webContents?.session===session.fromPartition('persist:krylt-movies')&&v.webContents.getURL()===origin+'/tool'),'Movies workspace');
+const movie=win.contentView.children.find(v=>v.webContents?.session===session.fromPartition('persist:krylt-movies'));
+const movieWC=movie.webContents;await until(()=>!movieWC.isLoading(),'movie catalogue');
+assert.equal(movieWC.getLastWebPreferences().disableDialogs,true);assert.notEqual(movieWC.session,session.fromPartition('persist:tempest-default'));
+const chrome=win.contentView.children.find(v=>v.webContents?.getURL().endsWith('/src/tool.html'));
+await until(()=>chrome.webContents.executeJavaScript('document.querySelector("#title").textContent==="KRYLT Movies"'),'dedicated title');
+assert(movie.getBounds().width>1000);const fullBounds=movie.getBounds();
+await command('tool-expand');assert(movie.getBounds().width<fullBounds.width);await command('tool-expand');assert.deepEqual(movie.getBounds(),fullBounds);
+const beforeTabs=(await command('resource-stats')).tabs.length,beforeDialogs=dialogCalls;
+await movieWC.executeJavaScript('document.querySelector("#page-click").onclick=()=>window.open('+JSON.stringify(secondaryOrigin+'/ad')+')');
+const button=await movieWC.executeJavaScript('(()=>{const r=document.querySelector("#page-click").getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};})()');movieWC.sendInputEvent({type:'mouseDown',...button,button:'left',clickCount:1});movieWC.sendInputEvent({type:'mouseUp',...button,button:'left',clickCount:1});
+await pause(100);await movieWC.executeJavaScript('for(let i=0;i<8;i++)window.open('+JSON.stringify(secondaryOrigin+'/ad')+')');
+await movieWC.executeJavaScript('location.href='+JSON.stringify(secondaryOrigin+'/takeover'));await pause(200);
+assert.equal(movieWC.getURL(),origin+'/tool');assert.equal(dialogCalls,beforeDialogs);assert.equal((await command('resource-stats')).tabs.length,beforeTabs);
+await movieWC.executeJavaScript('var frame=document.createElement("iframe");frame.id="player";frame.src='+JSON.stringify(origin+'/frame-redirect')+';document.body.append(frame)');
+await until(()=>movieWC.mainFrame.frames.some(f=>f.url===secondaryOrigin+'/player'),'cross-origin embedded player redirect');
+const embedded=movieWC.mainFrame.frames.find(f=>f.url===secondaryOrigin+'/player');
+await embedded.executeJavaScript('try{top.location.href='+JSON.stringify(secondaryOrigin+'/frame-takeover')+'}catch{}');await pause(150);assert.equal(movieWC.getURL(),origin+'/tool');
+await movieWC.executeJavaScript('alert("should be suppressed");document.body.dataset.dialogs="suppressed"');assert.equal(await movieWC.executeJavaScript('document.body.dataset.dialogs'),'suppressed');
+await movieWC.loadURL(origin+'/next');await command('tool-back');await until(()=>movieWC.getURL()===origin+'/tool','workspace Back');
+let downloadCanceled=false;movieWC.session.once('will-download',(_e,item)=>{downloadCanceled=item.getState()==='cancelled';item.once('done',(_event,status)=>{downloadCanceled=status==='cancelled';});});
+await movieWC.downloadURL(origin+'/download');await until(()=>downloadCanceled,'blocked movie download');
+await until(()=>chrome.webContents.executeJavaScript('document.querySelector("#status").textContent.includes("9 popups blocked")'),'visible silent-block counters');
+await capture(movieWC);fs.writeFileSync(path.join(output,'movies-workspace.png'),(await capture(wc)).toPNG());
+await command('guard-panel');await until(()=>js('document.querySelector("#panelTitle").textContent==="KRYLT Guard"'),'workspace Guard metrics');
+assert.equal(dialogCalls,beforeDialogs);await js('document.querySelector("#closePanel").click()');await command('tool-close');
+checks.push('Movies: native click popup + flood silently denied, top-level redirects blocked, embedded-player redirect allowed, dialogs and downloads suppressed, isolated storage, expansion, Back and visible Guard counts');
+
 // Keep a normal page open for the saved-session assertion after window closure.
 await command('navigate',origin+'/normal-session');await pause(300);win.close();await pause(80);const saved=JSON.parse(fs.readFileSync(path.join(profile,'tempest-ultra','tempest.json'),'utf8'));assert.ok(saved.session.some(entry=>entry.url.endsWith('/normal-session')));assert.equal(JSON.stringify(saved.session).includes('private-secret'),false);checks.push('Session survives window closure and excludes private tabs');
-assert.deepEqual(errors,[]);fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({checks,requestCount,errors},null,2));console.log('KRYLT_INTEGRATION_PASSED: '+checks.length+' flows');server.close();app.exit(0);
-})().catch(error=>{fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({error:error.stack,checks},null,2));console.error(error);server.close();app.exit(1);});
+assert.deepEqual(errors,[]);fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({checks,requestCount,errors},null,2));console.log('KRYLT_INTEGRATION_PASSED: '+checks.length+' flows');server.close();secondary.close();app.exit(0);
+})().catch(error=>{fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({error:error.stack,checks},null,2));console.error(error);server.close();secondary.close();app.exit(1);});

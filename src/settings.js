@@ -1,5 +1,5 @@
 'use strict';
-const DEFAULT_SETTINGS=Object.freeze({shield:true,light:false,bookmarksBar:true,wallpaper:true,collapsed:false,zoom:100,toolWidth:480,backgroundAudio:false,aiProvider:'chatgpt',showWhatsApp:true,showAI:true,showMusic:true,showDiscord:true,showTwitch:true,showTikTok:true,showStudio:true,restoreSession:true,suspendMinutes:0,maxLiveTabs:12,maxRAM:0,maxCPU:0,renderMode:'gpu',toolHeight:650,blockPopups:true,blockRedirects:true,locationPrompt:false,notificationsPrompt:false,mediaPrompt:false,askDownload:true,downloadPath:''});
+const DEFAULT_SETTINGS=Object.freeze({shield:true,light:false,bookmarksBar:true,wallpaper:true,collapsed:false,zoom:100,toolWidth:480,backgroundAudio:false,aiProvider:'chatgpt',showWhatsApp:true,showAI:true,showMusic:true,showMovies:true,showDiscord:true,showTwitch:true,showTikTok:true,showStudio:true,restoreSession:true,suspendMinutes:0,maxLiveTabs:12,maxRAM:0,maxCPU:0,renderMode:'gpu',toolHeight:650,blockPopups:true,blockRedirects:true,locationPrompt:false,notificationsPrompt:false,mediaPrompt:false,askDownload:true,downloadPath:''});
 const BOOL=new Set(Object.entries(DEFAULT_SETTINGS).filter(([,v])=>typeof v==='boolean').map(([k])=>k));
 function validateSetting(key,value){
  if(BOOL.has(key)&&typeof value==='boolean')return value;

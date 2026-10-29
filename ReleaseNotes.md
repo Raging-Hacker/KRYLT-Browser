@@ -1,3 +1,19 @@
+# KRYLT 3.0.0-dev.11
+
+Published by Cyclonix Designs.
+
+- Add a dedicated Movies workspace for Soap2Day with isolated storage, expanded/floating layouts, Back, Home, Reload and Guard metrics.
+- Block click-triggered advertising tabs, popup floods and off-site top-level redirects in Movies.
+- Remove repeated KRYLT redirect approval dialogs. Blocked activity is counted silently.
+- Keep embedded-player redirects inside their frames working.
+- Suppress JavaScript dialogs, unsolicited downloads and device/notification permissions in Movies; support video fullscreen.
+- Keep strict Movies protection enabled independently of ordinary Guard switches and whitelists.
+- Retain dev.10 local email/password profiles, vault migration, UI fixes, adaptive performance budgets and keep/remove-data uninstall choice.
+
+Unsigned development preview. Playback and availability depend on the external service and its players; no live video playback is guaranteed. Monthly updates remain disabled pending trusted signing.
+
+---
+
 # KRYLT 3.0.0-dev.9
 
 Published by Cyclonix Designs.

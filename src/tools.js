@@ -1,5 +1,6 @@
 'use strict';
 const TOOLS=Object.freeze({
+ movies:{name:'Movies',url:'https://ww25.soap2day.day/',icon:'movies'},
  whatsapp:{name:'WhatsApp',url:'https://web.whatsapp.com',icon:'whatsapp'},
  discord:{name:'Discord',url:'https://discord.com/app',icon:'discord'},
  twitch:{name:'Twitch',url:'https://www.twitch.tv',icon:'twitch'},

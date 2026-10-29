@@ -1,1 +1,11 @@
-<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; connect-src 'none'"><link rel="stylesheet" href="tool.css"><title>KRYLT sidebar app</title></head><body><header><span id="title">Sidebar app</span><div><button id="reload" title="Reload app">↻</button><button id="tab" title="Open in a full tab">↗</button><button id="close" title="Close panel">×</button></div></header><div id="providers"><button data-provider="chatgpt">ChatGPT</button><button data-provider="gemini">Gemini</button><button data-provider="claude">Claude</button></div><div id="status" role="status">Loading…</div><div id="resizeLeft" title="Drag to resize panel"></div><div id="resizeCorner" title="Drag to resize panel">◢</div><script src="tool.js"></script></body></html>
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; connect-src 'none'"><link rel="stylesheet" href="tool.css"><title>KRYLT workspace</title></head><body>
+<header><span id="title">Workspace</span><div>
+<button id="back" title="Go back" aria-label="Go back">←</button>
+<button id="home" title="Service home" aria-label="Service home">⌂</button>
+<button id="reload" title="Reload service" aria-label="Reload service">↻</button>
+<button id="expand" title="Expand workspace" aria-label="Expand workspace">⛶</button>
+<button id="tab" title="Open in a full tab" aria-label="Open in a full tab">↗</button>
+<button id="close" title="Close workspace" aria-label="Close workspace">×</button>
+</div></header>
+<div id="providers"><button data-provider="chatgpt">ChatGPT</button><button data-provider="gemini">Gemini</button><button data-provider="claude">Claude</button><span id="site"></span><button id="guard" hidden>Guard metrics</button></div>
+<div id="status" role="status">Loading…</div><div id="resizeLeft" title="Drag to resize panel"></div><div id="resizeCorner" title="Drag to resize panel">◢</div><script src="tool.js"></script></body></html>

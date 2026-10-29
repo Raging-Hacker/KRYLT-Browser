@@ -1,3 +1,15 @@
+# KRYLT 3.0.0-dev.11
+
+Movies opens the requested Soap2Day website in a dedicated, expandable workspace with separate site storage, Back, Home, Reload, and live Guard counters. Use the Movies shortcut in the sidebar. Restoring the floating layout enables the existing resize handles.
+
+Movies blocks all new windows/tabs, off-site top-level navigation, JavaScript dialogs and downloads. Protection stays on even if ordinary Guard settings are disabled or the source is whitelisted. Embedded cross-origin players and their own frame redirects can still load. Notification/device permission requests are denied; video fullscreen is permitted. The service remains a third-party website; availability and playback depend on it and its embedded players.
+
+Ordinary browsing now silently blocks website-created tabs/windows by default, including those triggered during a real click. Cross-site automatic redirects and frame takeovers are counted without interrupting modal dialogs. Trusted sites can be added to Guard's whitelist for ordinary popup-dependent workflows. Normal clicked links remain usable.
+
+This update retains all dev.10 profile/vault, UI, performance, location and uninstall changes. It remains an unsigned preview; automatic updates stay disabled until trusted signing is configured.
+
+---
+
 # KRYLT 3.0.0-dev.10
 
 This update fixes the title-bar drag region, responsive bookmark overflow, multi-provider AI icon and camera screenshot button. Floating panels resize from their left edge or bottom-left corner. KRYLT Guard has persistent counters, a site whitelist and stricter popup/cross-site redirect handling.
