@@ -4,7 +4,7 @@ const {chromiumUserAgent,externalURLs}=require('./browser-integration');
 const {VaultController}=require('./vault-controller');
 const {createUpdateService}=require('./update-service');
 const {Guard}=require('./guard');
-const {movieURL,protectNavigation}=require('./navigation-guard');
+const {movieURL,protectNavigation,MOVIE_AD_CSS}=require('./navigation-guard');
 const {approximateLocation,regionalSearch}=require('./location');
 const {APP_ID,configureIdentity}=require('./identity');
 const {importBookmarks,exportBookmarks,MAX_BYTES}=require('./bookmarks');
@@ -53,7 +53,7 @@ function configure(s,movies=false){if(configured.has(s))return;configured.add(s)
 }
 function newTab(privateMode=false){if(tabs.size>=40)throw Error('Close a tab before opening more (40 tab limit)');const t={id:++next,title:privateMode?'Private tab':'New tab',url:'',private:privateMode,favicon:'',lastActive:Date.now(),sleeping:false,blocked:0,loading:false,error:''};const previous=tabs.get(active);if(previous)previous.lastActive=Date.now();tabs.set(t.id,t);active=t.id;queueSessionSave();if(privateMode)toolActive=null;layout();state();return t;}
 function guardChanged(){if(guardTimer)return;guardTimer=setTimeout(()=>{guardTimer=null;save();state();},250);}
-function secureNavigation(wc,privateMode=false,movieRoot=null){return protectNavigation(wc,{guard,settings:()=>store.settings,changed:guardChanged,openTab:url=>{if(tabs.size<40)navigate(newTab(privateMode),url);},movieRoot});}
+function secureNavigation(wc,privateMode=false,movieRoot=null){wc.on('dom-ready',()=>{if(movieRoot||movieURL(wc.getURL()))wc.insertCSS(MOVIE_AD_CSS).catch(()=>{});});return protectNavigation(wc,{guard,settings:()=>store.settings,changed:guardChanged,openTab:url=>{if(tabs.size<40)navigate(newTab(privateMode),url);},movieRoot});}
 function navigate(t,input){if(!t)throw Error('No active tab');const url=regionalSearch(resolveInput(input),store.location);if(!url)return;
  if(!t.view){const s=session.fromPartition(t.private?'tempest-private-'+t.id:'persist:tempest-default');configure(s);const view=new WebContentsView({webPreferences:prefs(s)});t.view=view;t.sleeping=false;win.contentView.addChildView(view);const wc=view.webContents;secureNavigation(wc,t.private);wc.setZoomFactor(store.settings.zoom/100);
  wc.on('page-title-updated',(_e,title)=>{t.title=title.slice(0,160);const latest=store.history.find(h=>h.id===t.historyId);if(latest)latest.title=t.title;queueSessionSave();state();});

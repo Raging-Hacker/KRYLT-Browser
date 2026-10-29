@@ -1,6 +1,9 @@
 'use strict';
 const {webURL}=require('./policy');
 const {allowed,sameSite}=require('./guard');
+// Observed site advert: a fixed overlay containing a srcdoc extension pitch.
+// Match its actual copy and fixed wrapper, never generic player iframes.
+const MOVIE_AD_CSS='iframe[srcdoc*="Ad Block Ghost" i], :is(html, body) > div[style*="position: fixed"]:has(iframe[srcdoc*="Ad Block Ghost" i]) { display: none !important; pointer-events: none !important; }';
 
 // Keep the catalogue and embedded players separate: a player may load in a
 // frame, but must never replace the catalogue or spawn an advertising tab.
@@ -40,4 +43,4 @@ function protectNavigation(wc,{guard,settings,changed,openTab,movieRoot=null,now
  wc.on('will-prevent-unload',event=>{if(strict())event.preventDefault();});
  return counts;
 }
-module.exports={movieURL,protectNavigation};
+module.exports={movieURL,protectNavigation,MOVIE_AD_CSS};

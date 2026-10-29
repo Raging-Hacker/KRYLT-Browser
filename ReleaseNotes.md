@@ -4,6 +4,7 @@ Published by Cyclonix Designs.
 
 - Add a dedicated Movies workspace for Soap2Day with isolated storage, expanded/floating layouts, Back, Home, Reload and Guard metrics.
 - Block click-triggered advertising tabs, popup floods and off-site top-level redirects in Movies.
+- Hide the observed full-screen Ad Block Ghost extension advert without hiding ordinary video frames.
 - Remove repeated KRYLT redirect approval dialogs. Blocked activity is counted silently.
 - Keep embedded-player redirects inside their frames working.
 - Suppress JavaScript dialogs, unsolicited downloads and device/notification permissions in Movies; support video fullscreen.

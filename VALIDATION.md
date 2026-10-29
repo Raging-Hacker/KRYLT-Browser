@@ -2,7 +2,7 @@
 
 - 63 Node tests pass. New regressions cover real-click popup policy, popup floods, trusted exceptions, strict service-host boundaries, main-frame takeovers, embedded-player redirects and unload traps.
 - The live Soap2Day home and catalogue pages were inspected in a browser. No live movie playback, external player availability or DRM claim is made.
-- Electron integration now reproduces click-triggered ads, popup floods, cross-origin player-frame redirects, attempted top-level takeovers, dialog suppression, blocked downloads, separate storage, expandable layout, Back and visible counters. CI results are recorded with the build.
+- Electron integration now reproduces click-triggered ads, popup floods, cross-origin player-frame redirects, attempted top-level takeovers, dialog suppression, the observed extension-ad overlay, preserved player-frame visibility, blocked downloads, separate storage, expandable layout, Back and visible counters. CI results are recorded with the build.
 - All dev.10 limitations below still apply. The original logo and persistent profile identifiers are retained.
 
 # KRYLT dev.10 validation — 29 October 2026

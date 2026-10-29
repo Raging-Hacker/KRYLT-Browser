@@ -72,13 +72,16 @@ assert.equal(movieWC.getURL(),origin+'/tool');assert.equal(dialogCalls,beforeDia
 await movieWC.executeJavaScript('var frame=document.createElement("iframe");frame.id="player";frame.src='+JSON.stringify(origin+'/frame-redirect')+';document.body.append(frame)');
 await until(()=>movieWC.mainFrame.frames.some(f=>f.url===secondaryOrigin+'/player'),'cross-origin embedded player redirect');
 console.log('QA_MOVIES: embedded redirect loaded');const embedded=movieWC.mainFrame.frames.find(f=>f.url===secondaryOrigin+'/player');
+await movieWC.executeJavaScript('var advert=document.createElement("div");advert.id="extension-advert";advert.style="position: fixed; inset: 0; z-index: 2147483647";var pitch=document.createElement("iframe");pitch.srcdoc="<h1>Ad Block Ghost</h1>";advert.append(pitch);document.documentElement.append(advert)');
+await until(()=>movieWC.executeJavaScript('getComputedStyle(document.querySelector("#extension-advert")).display==="none"'),'extension advert and click-overlay hidden');
+assert.notEqual(await movieWC.executeJavaScript('getComputedStyle(document.querySelector("#player")).display'),'none');
 await embedded.executeJavaScript('try{top.location.href='+JSON.stringify(secondaryOrigin+'/frame-takeover')+'}catch{}');await pause(150);assert.equal(movieWC.getURL(),origin+'/tool');
 await movieWC.executeJavaScript('alert("should be suppressed");document.body.dataset.dialogs="suppressed"');assert.equal(await movieWC.executeJavaScript('document.body.dataset.dialogs'),'suppressed');
 await movieWC.loadURL(origin+'/next');await command('tool-back');await until(()=>movieWC.getURL()===origin+'/tool','workspace Back');
 console.log('QA_MOVIES: navigation controls passed');let downloadCanceled=false;movieWC.session.once('will-download',(_e,item)=>{downloadCanceled=item.getState()==='cancelled';item.once('done',(_event,status)=>{downloadCanceled=status==='cancelled';});});
 await movieWC.downloadURL(origin+'/download');await until(()=>downloadCanceled,'blocked movie download');
 await until(()=>chrome.webContents.executeJavaScript('document.querySelector("#status").textContent.includes("9 popups blocked")'),'visible silent-block counters');
-await capture(movieWC);fs.writeFileSync(path.join(output,'movies-workspace.png'),(await capture(wc)).toPNG());
+fs.writeFileSync(path.join(output,'movies-toolbar.png'),(await capture(chrome.webContents)).toPNG());fs.writeFileSync(path.join(output,'movies-workspace.png'),(await capture(movieWC)).toPNG());
 await command('guard-panel');await until(()=>js('document.querySelector("#panelTitle").textContent==="KRYLT Guard"'),'workspace Guard metrics');
 assert.equal(dialogCalls,beforeDialogs);await js('document.querySelector("#closePanel").click()');await command('tool-close');
 checks.push('Movies: native click popup + flood silently denied, top-level redirects blocked, embedded-player redirect allowed, dialogs and downloads suppressed, isolated storage, expansion, Back and visible Guard counts');
