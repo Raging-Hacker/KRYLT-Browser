@@ -5,8 +5,9 @@
 const {app,BrowserWindow,dialog,Menu}=require('electron');
 const fs=require('node:fs'),path=require('node:path'),https=require('node:https'),assert=require('node:assert/strict'),os=require('node:os');
 app.disableHardwareAcceleration();
-const checks=[];
+const checks=[];const record=checks.push.bind(checks);checks.push=(...items)=>{console.log('QA_PROGRESS: '+items[0]);return record(...items);};
 const output=process.env.KRYLT_QA_OUTPUT;fs.mkdirSync(output,{recursive:true});
+process.on('uncaughtException',error=>{console.error('QA_UNCAUGHT',error);fs.writeFileSync(path.join(output,'results.json'),JSON.stringify({error:error.stack,checks}));app.exit(1);});process.on('unhandledRejection',error=>{console.error('QA_REJECTION',error);app.exit(1);});
 const profile=fs.mkdtempSync(path.join(os.tmpdir(),'krylt-ui-test-'));app.setPath('appData',profile);
 if(process.env.KRYLT_TEST_UNSANDBOXED==='1')app.enableSandbox=()=>{};
 app.requestSingleInstanceLock=()=>true;app.quit=()=>{};
@@ -23,7 +24,7 @@ async function until(fn,label){for(let attempt=0;attempt<100;attempt++){if(await
 app.on('certificate-error',(event,_wc,url,_error,certificate,callback)=>{if(url.startsWith(origin+'/')&&certificate.data.trim()===fs.readFileSync(path.join(__dirname,'fixtures/localhost.cert.pem'),'utf8').trim()){event.preventDefault();callback(true);}else callback(false);});
 for(const tool of Object.values(require('../src/tools').TOOLS))tool.url=origin+'/tool';
 require('../src/main');
-await app.whenReady();await until(()=>BrowserWindow.getAllWindows().length>0,'window');const win=BrowserWindow.getAllWindows()[0],wc=win.webContents;const js=code=>wc.executeJavaScript(code),command=(a,p)=>js('window.krylt.command('+JSON.stringify(a)+','+JSON.stringify(p)+')');
+await app.whenReady();await until(()=>BrowserWindow.getAllWindows().length>0,'window');const win=BrowserWindow.getAllWindows()[0],wc=win.webContents;const js=code=>Promise.race([wc.executeJavaScript(code),new Promise((_,reject)=>{const timer=setTimeout(()=>reject(Error('Renderer command timed out: '+code.slice(0,120))),15000);timer.unref();})]),command=(a,p)=>js('window.krylt.command('+JSON.stringify(a)+','+JSON.stringify(p)+')');
 const errors=[];wc.on('console-message',details=>{if(details.level==='error'&&!/favicon|ERR_/i.test(details.message))errors.push(details.message);});
 await until(()=>js('!!window.krylt && !!document.querySelector("#tabs button")'),'shell loaded');
 assert.ok(await js('document.querySelector("#tabs").getBoundingClientRect().bottom<=document.querySelector("#addressForm").getBoundingClientRect().top'));
